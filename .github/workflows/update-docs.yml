@@ -56,7 +56,9 @@ jobs:
 
       - name: Update API documentation
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use PRIVATE_REPOS_TOKEN (PAT with repo scope) to access private repos
+          # Falls back to GITHUB_TOKEN for public repos only
+          GITHUB_TOKEN: ${{ secrets.PRIVATE_REPOS_TOKEN || secrets.GITHUB_TOKEN }}
         run: poetry run keboola-docs update
 
       - name: Check for changes
