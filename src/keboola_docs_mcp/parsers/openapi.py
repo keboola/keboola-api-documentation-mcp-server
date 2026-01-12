@@ -72,7 +72,9 @@ class OpenApiParser:
                 section = tags[0] if tags else default_section
 
                 # Get summary and description
-                summary = operation.get("summary", operation.get("operationId", f"{method.upper()} {path}"))
+                summary = operation.get(
+                    "summary", operation.get("operationId", f"{method.upper()} {path}")
+                )
                 description = operation.get("description", "")
 
                 # Parse parameters
@@ -128,15 +130,17 @@ class OpenApiParser:
             default = schema.get("default")
             example = schema.get("example")
 
-            result.append(Parameter(
-                name=name,
-                location=location,
-                type=param_type,
-                required=required,
-                description=description,
-                default=str(default) if default is not None else None,
-                example=str(example) if example is not None else None,
-            ))
+            result.append(
+                Parameter(
+                    name=name,
+                    location=location,
+                    type=param_type,
+                    required=required,
+                    description=description,
+                    default=str(default) if default is not None else None,
+                    example=str(example) if example is not None else None,
+                )
+            )
 
         return result
 
@@ -155,15 +159,25 @@ class OpenApiParser:
                 required_props = schema.get("required", [])
 
                 for name, prop_schema in props.items():
-                    params.append(Parameter(
-                        name=name,
-                        location="body",
-                        type=prop_schema.get("type", "string"),
-                        required=name in required_props,
-                        description=prop_schema.get("description", ""),
-                        default=str(prop_schema.get("default")) if prop_schema.get("default") is not None else None,
-                        example=str(prop_schema.get("example")) if prop_schema.get("example") is not None else None,
-                    ))
+                    params.append(
+                        Parameter(
+                            name=name,
+                            location="body",
+                            type=prop_schema.get("type", "string"),
+                            required=name in required_props,
+                            description=prop_schema.get("description", ""),
+                            default=(
+                                str(prop_schema.get("default"))
+                                if prop_schema.get("default") is not None
+                                else None
+                            ),
+                            example=(
+                                str(prop_schema.get("example"))
+                                if prop_schema.get("example") is not None
+                                else None
+                            ),
+                        )
+                    )
                 break
 
         return params

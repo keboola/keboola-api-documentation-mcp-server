@@ -122,7 +122,11 @@ class ApibParser:
 
                 # Get content until next action
                 action_start = action_match.end()
-                action_end = action_matches[j + 1].start() if j + 1 < len(action_matches) else len(resource_content)
+                action_end = (
+                    action_matches[j + 1].start()
+                    if j + 1 < len(action_matches)
+                    else len(resource_content)
+                )
                 action_content = resource_content[action_start:action_end]
 
                 # Use action name or combine with resource name
@@ -200,13 +204,15 @@ class ApibParser:
                     param_type = t
                     break
 
-            parameters.append(Parameter(
-                name=name,
-                location="path" if "{" + name + "}" in content else "query",
-                type=param_type,
-                required=required,
-                description=description.strip(),
-            ))
+            parameters.append(
+                Parameter(
+                    name=name,
+                    location="path" if "{" + name + "}" in content else "query",
+                    type=param_type,
+                    required=required,
+                    description=description.strip(),
+                )
+            )
 
         return parameters
 
@@ -235,13 +241,15 @@ class ApibParser:
                     param_type = t
                     break
 
-            parameters.append(Parameter(
-                name=name,
-                location="body",
-                type=param_type,
-                required=required and not optional,
-                description=description.strip(),
-            ))
+            parameters.append(
+                Parameter(
+                    name=name,
+                    location="body",
+                    type=param_type,
+                    required=required and not optional,
+                    description=description.strip(),
+                )
+            )
 
         return parameters
 
@@ -258,7 +266,9 @@ class ApibParser:
             # Remove common leading whitespace
             if lines:
                 min_indent = min(len(line) - len(line.lstrip()) for line in lines if line.strip())
-                cleaned = "\n".join(line[min_indent:] if len(line) > min_indent else line for line in lines)
+                cleaned = "\n".join(
+                    line[min_indent:] if len(line) > min_indent else line for line in lines
+                )
                 return cleaned.strip()
 
         return None

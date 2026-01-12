@@ -26,7 +26,9 @@ class Endpoint(BaseModel):
     summary: str = Field(description="Brief summary of the endpoint")
     description: str = Field(default="", description="Full description")
     parameters: list[Parameter] = Field(default_factory=list)
-    request_body_schema: Optional[dict] = Field(default=None, description="JSON schema for request body")
+    request_body_schema: Optional[dict] = Field(
+        default=None, description="JSON schema for request body"
+    )
     request_example: Optional[str] = Field(default=None, description="Example request body")
     response_example: Optional[str] = Field(default=None, description="Example response")
     auth_header: Optional[str] = Field(default=None, description="Authentication header name")

@@ -32,20 +32,24 @@ class TestSearchIndex:
         """Test searching by path components."""
         index = SearchIndex()
 
-        index.add_endpoint(Endpoint(
-            api_name="Storage API",
-            section="Tables",
-            path="/v2/storage/tables",
-            method="GET",
-            summary="List tables",
-        ))
-        index.add_endpoint(Endpoint(
-            api_name="Storage API",
-            section="Buckets",
-            path="/v2/storage/buckets",
-            method="GET",
-            summary="List buckets",
-        ))
+        index.add_endpoint(
+            Endpoint(
+                api_name="Storage API",
+                section="Tables",
+                path="/v2/storage/tables",
+                method="GET",
+                summary="List tables",
+            )
+        )
+        index.add_endpoint(
+            Endpoint(
+                api_name="Storage API",
+                section="Buckets",
+                path="/v2/storage/buckets",
+                method="GET",
+                summary="List buckets",
+            )
+        )
 
         results = index.search("tables")
         assert len(results) == 1
@@ -55,20 +59,24 @@ class TestSearchIndex:
         """Test filtering by API name."""
         index = SearchIndex()
 
-        index.add_endpoint(Endpoint(
-            api_name="Storage API",
-            section="Tables",
-            path="/tables",
-            method="GET",
-            summary="List tables",
-        ))
-        index.add_endpoint(Endpoint(
-            api_name="Management API",
-            section="Projects",
-            path="/projects",
-            method="GET",
-            summary="List projects",
-        ))
+        index.add_endpoint(
+            Endpoint(
+                api_name="Storage API",
+                section="Tables",
+                path="/tables",
+                method="GET",
+                summary="List tables",
+            )
+        )
+        index.add_endpoint(
+            Endpoint(
+                api_name="Management API",
+                section="Projects",
+                path="/projects",
+                method="GET",
+                summary="List projects",
+            )
+        )
 
         results = index.search("list", api_filter="storage")
         assert len(results) == 1
@@ -78,20 +86,24 @@ class TestSearchIndex:
         """Test filtering by HTTP method."""
         index = SearchIndex()
 
-        index.add_endpoint(Endpoint(
-            api_name="API",
-            section="Resources",
-            path="/resources",
-            method="GET",
-            summary="Get resources",
-        ))
-        index.add_endpoint(Endpoint(
-            api_name="API",
-            section="Resources",
-            path="/resources",
-            method="POST",
-            summary="Create resource",
-        ))
+        index.add_endpoint(
+            Endpoint(
+                api_name="API",
+                section="Resources",
+                path="/resources",
+                method="GET",
+                summary="Get resources",
+            )
+        )
+        index.add_endpoint(
+            Endpoint(
+                api_name="API",
+                section="Resources",
+                path="/resources",
+                method="POST",
+                summary="Create resource",
+            )
+        )
 
         results = index.search("resources", method_filter="POST")
         assert len(results) == 1
@@ -121,20 +133,24 @@ class TestSearchIndex:
         """Test listing all APIs."""
         index = SearchIndex()
 
-        index.add_endpoint(Endpoint(
-            api_name="API 1",
-            section="Section",
-            path="/path1",
-            method="GET",
-            summary="Test 1",
-        ))
-        index.add_endpoint(Endpoint(
-            api_name="API 2",
-            section="Section",
-            path="/path2",
-            method="GET",
-            summary="Test 2",
-        ))
+        index.add_endpoint(
+            Endpoint(
+                api_name="API 1",
+                section="Section",
+                path="/path1",
+                method="GET",
+                summary="Test 1",
+            )
+        )
+        index.add_endpoint(
+            Endpoint(
+                api_name="API 2",
+                section="Section",
+                path="/path2",
+                method="GET",
+                summary="Test 2",
+            )
+        )
 
         apis = index.list_apis()
         assert len(apis) == 2
@@ -146,27 +162,33 @@ class TestSearchIndex:
         """Test getting endpoints by section."""
         index = SearchIndex()
 
-        index.add_endpoint(Endpoint(
-            api_name="API",
-            section="Tables",
-            path="/tables",
-            method="GET",
-            summary="List tables",
-        ))
-        index.add_endpoint(Endpoint(
-            api_name="API",
-            section="Tables",
-            path="/tables",
-            method="POST",
-            summary="Create table",
-        ))
-        index.add_endpoint(Endpoint(
-            api_name="API",
-            section="Buckets",
-            path="/buckets",
-            method="GET",
-            summary="List buckets",
-        ))
+        index.add_endpoint(
+            Endpoint(
+                api_name="API",
+                section="Tables",
+                path="/tables",
+                method="GET",
+                summary="List tables",
+            )
+        )
+        index.add_endpoint(
+            Endpoint(
+                api_name="API",
+                section="Tables",
+                path="/tables",
+                method="POST",
+                summary="Create table",
+            )
+        )
+        index.add_endpoint(
+            Endpoint(
+                api_name="API",
+                section="Buckets",
+                path="/buckets",
+                method="GET",
+                summary="List buckets",
+            )
+        )
 
         results = index.get_api_endpoints("API", "Tables")
         assert len(results) == 2
