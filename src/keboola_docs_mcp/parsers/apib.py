@@ -69,7 +69,7 @@ class ApibParser:
         group_splits = self.GROUP_PATTERN.split(content)
 
         # First part is the intro (before first group)
-        intro = group_splits[0] if group_splits else ""
+        group_splits[0] if group_splits else ""
 
         # Process groups (pairs of group_name, group_content)
         for i in range(1, len(group_splits), 2):

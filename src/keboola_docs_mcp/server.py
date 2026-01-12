@@ -6,7 +6,7 @@ from typing import Optional
 from mcp.server.fastmcp import Context, FastMCP
 
 from .index import SearchIndex, build_index
-from .models import ApiInfo, Endpoint
+from .models import Endpoint
 
 
 @asynccontextmanager

@@ -149,7 +149,7 @@ class OpenApiParser:
         params = []
 
         content = request_body.get("content", {})
-        required = request_body.get("required", False)
+        request_body.get("required", False)
 
         # Try JSON content type first
         for content_type in ["application/json", "application/x-www-form-urlencoded", "*/*"]:

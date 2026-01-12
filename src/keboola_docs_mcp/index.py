@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Optional
 
 from .config import get_docs_dir, load_sources
-from .models import ApiInfo, DocumentSource, Endpoint
+from .models import ApiInfo, Endpoint
 from .parsers import ApibParser, OpenApiParser
 
 
