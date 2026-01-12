@@ -1,6 +1,5 @@
 """Tests for search index."""
 
-
 from keboola_docs_mcp.index import SearchIndex, build_index
 from keboola_docs_mcp.models import Endpoint
 
