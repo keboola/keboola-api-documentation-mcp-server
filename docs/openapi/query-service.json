@@ -1,0 +1,1105 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "description": "A service for managing and executing SQL query jobs with support for transactional operations and job status tracking.",
+        "title": "Query Service API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "Keboola Support",
+            "url": "https://help.keboola.com/management/support/",
+            "email": "support@keboola.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/": {
+            "get": {
+                "description": "Get basic service information and API documentation link",
+                "tags": [
+                    "service"
+                ],
+                "summary": "Service index",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/handlers.IndexResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/branches/{branchId}/workspaces/{workspaceId}/queries": {
+            "get": {
+                "description": "Retrieve the history of query statements for the specified branch and workspace",
+                "tags": [
+                    "queries"
+                ],
+                "summary": "Get query history",
+                "parameters": [
+                    {
+                        "example": "main",
+                        "description": "Branch ID",
+                        "name": "branchId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "example": "workspace-123",
+                        "description": "Workspace ID",
+                        "name": "workspaceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Get results after this statement ID for pagination",
+                        "name": "afterId",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Number of results per page (default: 500)",
+                        "name": "pageSize",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/handlers.QueryHistoryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - invalid parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httperrors.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - project scope not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httperrors.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httperrors.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new query job with SQL statements in the specified branch and workspace",
+                "tags": [
+                    "jobs"
+                ],
+                "summary": "Submit query job",
+                "parameters": [
+                    {
+                        "example": "main",
+                        "description": "Branch ID",
+                        "name": "branchId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "example": "workspace-123",
+                        "description": "Workspace ID",
+                        "name": "workspaceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handlers.SubmitQueryJobRequest"
+                            }
+                        }
+                    },
+                    "description": "Query job request",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/handlers.SubmitJobResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - invalid request body or missing parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httperrors.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - project scope not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httperrors.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httperrors.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/documentation": {
+            "get": {
+                "description": "Interactive API documentation with Swagger UI",
+                "tags": [
+                    "documentation"
+                ],
+                "summary": "API Documentation",
+                "responses": {
+                    "200": {
+                        "description": "HTML page with Swagger UI",
+                        "content": {
+                            "text/html": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/queries/{queryJobId}": {
+            "get": {
+                "description": "Retrieve the current status and statements of a query job by its ID",
+                "tags": [
+                    "jobs"
+                ],
+                "summary": "Get job status",
+                "parameters": [
+                    {
+                        "example": "job-12345",
+                        "description": "Query job ID",
+                        "name": "queryJobId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/handlers.JobStatusResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - queryJobId is required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httperrors.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httperrors.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/queries/{queryJobId}/cancel": {
+            "post": {
+                "description": "Cancel a running query job by its ID. The job will be marked for cancellation and stopped as soon as possible.",
+                "tags": [
+                    "jobs"
+                ],
+                "summary": "Cancel job",
+                "parameters": [
+                    {
+                        "example": "job-12345",
+                        "description": "Query job ID",
+                        "name": "queryJobId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handlers.CancelQueryJobRequest"
+                            }
+                        }
+                    },
+                    "description": "Cancellation request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/handlers.CancelQueryJobResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - invalid request body, missing queryJobId, or job already in terminal state",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httperrors.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - project scope not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httperrors.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found - job not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httperrors.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httperrors.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/queries/{queryJobId}/{statementId}/profile": {
+            "get": {
+                "description": "Get the profile of a specific statement within a query job.",
+                "tags": [
+                    "jobs"
+                ],
+                "summary": "Get statement profile",
+                "parameters": [
+                    {
+                        "example": "550e8400-e29b-41d4-a716-446655440000",
+                        "description": "Query job ID",
+                        "name": "queryJobId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "example": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+                        "description": "Statement ID",
+                        "name": "statementId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/handlers.Profile"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httperrors.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/queries/{queryJobId}/{statementId}/results": {
+            "get": {
+                "description": "Retrieve the results of a specific statement within a query job. Returns data, rows affected count, and status information with pagination support.",
+                "tags": [
+                    "jobs"
+                ],
+                "summary": "Get job results",
+                "parameters": [
+                    {
+                        "example": "job-12345",
+                        "description": "Query job ID",
+                        "name": "queryJobId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "example": "stmt-67890",
+                        "description": "Statement ID",
+                        "name": "statementId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "example": 0,
+                        "description": "Offset for pagination",
+                        "name": "offset",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "example": 500,
+                        "description": "Page size for pagination",
+                        "name": "pageSize",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 500
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Regular JSON response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/handlers.ResultResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - queryJobId or statementId is required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httperrors.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found - job or statement not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httperrors.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httperrors.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/queries/{queryJobId}/{statementId}/results/stream": {
+            "get": {
+                "description": "Stream the results of a specific statement within a query job using HTTP/2 chunked transfer encoding. Returns data as NDJSON format for efficient streaming of large result sets.",
+                "tags": [
+                    "jobs"
+                ],
+                "summary": "Stream job results",
+                "parameters": [
+                    {
+                        "example": "job-12345",
+                        "description": "Query job ID",
+                        "name": "queryJobId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "example": "stmt-67890",
+                        "description": "Statement ID",
+                        "name": "statementId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Streaming NDJSON response",
+                        "content": {
+                            "application/x-ndjson": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - queryJobId or statementId is required",
+                        "content": {
+                            "application/x-ndjson": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httperrors.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found - job or statement not found",
+                        "content": {
+                            "application/x-ndjson": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httperrors.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "426": {
+                        "description": "Upgrade Required - HTTP/2 required for streaming",
+                        "content": {
+                            "application/x-ndjson": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httperrors.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/x-ndjson": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httperrors.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/health-check": {
+            "get": {
+                "description": "Get the health status of the service",
+                "tags": [
+                    "health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "servers": [
+        {
+            "url": "//your-instance.keboola.com"
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "StorageApiToken": {
+                "description": "Keboola Storage API token for authentication.",
+                "type": "apiKey",
+                "name": "X-StorageAPI-Token",
+                "in": "header"
+            }
+        },
+        "schemas": {
+            "handlers.CancelQueryJobRequest": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "example": "User requested cancellation"
+                    }
+                }
+            },
+            "handlers.CancelQueryJobResponse": {
+                "type": "object",
+                "required": [
+                    "queryJobId"
+                ],
+                "properties": {
+                    "queryJobId": {
+                        "type": "string",
+                        "example": "job-12345"
+                    }
+                }
+            },
+            "handlers.Column": {
+                "type": "object",
+                "required": [
+                    "length",
+                    "name",
+                    "nullable",
+                    "type"
+                ],
+                "properties": {
+                    "length": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "nullable": {
+                        "type": "boolean"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                }
+            },
+            "handlers.IndexResponse": {
+                "type": "object",
+                "required": [
+                    "apiDocs",
+                    "appName",
+                    "appVersion"
+                ],
+                "properties": {
+                    "apiDocs": {
+                        "type": "string",
+                        "example": "http://localhost:8090/api/v1/documentation/swagger.json"
+                    },
+                    "appName": {
+                        "type": "string",
+                        "example": "query"
+                    },
+                    "appVersion": {
+                        "type": "string",
+                        "example": "1.0.0"
+                    }
+                }
+            },
+            "handlers.JobStatusResponse": {
+                "type": "object",
+                "required": [
+                    "actorType",
+                    "changedAt",
+                    "createdAt",
+                    "queryJobId",
+                    "statements",
+                    "status"
+                ],
+                "properties": {
+                    "actorType": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/models.ActorType"
+                            }
+                        ],
+                        "example": "user"
+                    },
+                    "canceledAt": {
+                        "type": "string"
+                    },
+                    "cancellationReason": {
+                        "type": "string"
+                    },
+                    "changedAt": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "queryJobId": {
+                        "type": "string",
+                        "example": "job-12345"
+                    },
+                    "statements": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/handlers.Statement"
+                        }
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/models.JobState"
+                            }
+                        ],
+                        "example": "processing"
+                    }
+                }
+            },
+            "handlers.Operation": {
+                "type": "object",
+                "required": [
+                    "executionTimeBreakdown",
+                    "operatorAttributes",
+                    "operatorStatistics",
+                    "operatorType",
+                    "parentOperators",
+                    "queryId"
+                ],
+                "properties": {
+                    "executionTimeBreakdown": {
+                        "description": "Breakdown of execution time for the operator, e.g., time spent in different phases of execution.",
+                        "type": "object",
+                        "additionalProperties": {}
+                    },
+                    "operatorAttributes": {
+                        "description": "Attributes of the operator, e.g., the number of rows returned by the operator.",
+                        "type": "object",
+                        "additionalProperties": {}
+                    },
+                    "operatorId": {
+                        "type": "integer"
+                    },
+                    "operatorStatistics": {
+                        "description": "Statistics for the operator, e.g., number of rows processed, CPU time, etc.",
+                        "type": "object",
+                        "additionalProperties": {}
+                    },
+                    "operatorType": {
+                        "description": "Type of the operator, e.g., SELECT, INSERT, etc.",
+                        "type": "string"
+                    },
+                    "parentOperators": {
+                        "description": "IDs of the parent operators, e.g., the ID of the parent SELECT operator for a SELECT operator in a subquery.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "queryId": {
+                        "type": "string"
+                    },
+                    "stepId": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "handlers.Profile": {
+                "type": "object",
+                "required": [
+                    "operations",
+                    "queryId"
+                ],
+                "properties": {
+                    "operations": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/handlers.Operation"
+                        }
+                    },
+                    "queryId": {
+                        "type": "string"
+                    }
+                }
+            },
+            "handlers.QueryHistoryResponse": {
+                "type": "object",
+                "required": [
+                    "statements"
+                ],
+                "properties": {
+                    "statements": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/handlers.StatementWithWorkspaceInfo"
+                        }
+                    }
+                }
+            },
+            "handlers.ResultResponse": {
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "properties": {
+                    "columns": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/handlers.Column"
+                        }
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "100 rows affected"
+                    },
+                    "numberOfRows": {
+                        "type": "integer",
+                        "example": 100
+                    },
+                    "rowsAffected": {
+                        "type": "integer",
+                        "example": 100
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/models.StatementState"
+                            }
+                        ],
+                        "example": "completed"
+                    }
+                }
+            },
+            "handlers.Statement": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "query",
+                    "status"
+                ],
+                "properties": {
+                    "completedAt": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "type": "string"
+                    },
+                    "executedAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "numberOfRows": {
+                        "type": "integer"
+                    },
+                    "query": {
+                        "type": "string"
+                    },
+                    "queryId": {
+                        "type": "string"
+                    },
+                    "rowsAffected": {
+                        "type": "integer"
+                    },
+                    "sessionId": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/models.StatementState"
+                    }
+                }
+            },
+            "handlers.StatementWithWorkspaceInfo": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "query",
+                    "queryJobId",
+                    "status"
+                ],
+                "properties": {
+                    "backendSize": {
+                        "type": "string"
+                    },
+                    "completedAt": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "type": "string"
+                    },
+                    "executedAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "numberOfRows": {
+                        "type": "integer"
+                    },
+                    "query": {
+                        "type": "string"
+                    },
+                    "queryId": {
+                        "type": "string"
+                    },
+                    "queryJobId": {
+                        "type": "string"
+                    },
+                    "rowsAffected": {
+                        "type": "integer"
+                    },
+                    "sessionId": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/models.StatementState"
+                    },
+                    "warehouse": {
+                        "type": "string"
+                    }
+                }
+            },
+            "handlers.SubmitJobResponse": {
+                "type": "object",
+                "required": [
+                    "queryJobId"
+                ],
+                "properties": {
+                    "queryJobId": {
+                        "type": "string",
+                        "example": "job-12345"
+                    }
+                }
+            },
+            "handlers.SubmitQueryJobRequest": {
+                "type": "object",
+                "required": [
+                    "statements",
+                    "transactional"
+                ],
+                "properties": {
+                    "actorType": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/models.ActorType"
+                            }
+                        ],
+                        "example": "user"
+                    },
+                    "statements": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "SELECT * FROM table1",
+                            "INSERT INTO table2 SELECT * FROM table1"
+                        ]
+                    },
+                    "transactional": {
+                        "type": "boolean",
+                        "example": true
+                    }
+                }
+            },
+            "httperrors.ErrorResponse": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "description": "String representation of the status code",
+                        "type": "string"
+                    },
+                    "context": {
+                        "description": "Optional context information",
+                        "type": "object",
+                        "additionalProperties": {}
+                    },
+                    "error": {
+                        "description": "HTTP status code",
+                        "type": "integer"
+                    },
+                    "exception": {
+                        "description": "Error message",
+                        "type": "string"
+                    },
+                    "exceptionId": {
+                        "description": "Unique error ID for tracking",
+                        "type": "string"
+                    },
+                    "status": {
+                        "description": "Always \"error\"",
+                        "type": "string"
+                    },
+                    "trace": {
+                        "description": "Stack trace information if debug mode",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "models.ActorType": {
+                "type": "string",
+                "enum": [
+                    "user",
+                    "system"
+                ],
+                "x-enum-varnames": [
+                    "ActorTypeUser",
+                    "ActorTypeSystem"
+                ]
+            },
+            "models.JobState": {
+                "type": "string",
+                "enum": [
+                    "created",
+                    "enqueued",
+                    "processing",
+                    "canceled",
+                    "completed",
+                    "failed"
+                ],
+                "x-enum-varnames": [
+                    "JobStateCreated",
+                    "JobStateEnqueued",
+                    "JobStateProcessing",
+                    "JobStateCanceled",
+                    "JobStateCompleted",
+                    "JobStateFailed"
+                ]
+            },
+            "models.StatementState": {
+                "type": "string",
+                "enum": [
+                    "waiting",
+                    "processing",
+                    "canceled",
+                    "completed",
+                    "failed",
+                    "notExecuted"
+                ],
+                "x-enum-varnames": [
+                    "StatementStateWaiting",
+                    "StatementStateProcessing",
+                    "StatementStateCanceled",
+                    "StatementStateCompleted",
+                    "StatementStateFailed",
+                    "StatementNotExecuted"
+                ]
+            }
+        }
+    }
+}

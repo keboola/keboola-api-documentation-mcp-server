@@ -1,0 +1,75 @@
+# Keboola API Documentation Sources
+# All sources are online URLs - fetched by `keboola-docs update`
+
+sources:
+  # Apiary (.apib) files from GitHub
+  - name: Storage API
+    url: https://raw.githubusercontent.com/keboola/storage-api-php-client/master/apiary.apib
+    output: docs/apiary/storage-api.apib
+    format: apib
+    description: Core data storage API for tables, buckets, files, and jobs
+    auth_header: X-StorageApi-Token
+    base_url: https://connection.keboola.com
+
+  - name: Management API
+    url: https://raw.githubusercontent.com/keboola/kbc-manage-api-php-client/master/apiary.apib
+    output: docs/apiary/manage-api.apib
+    format: apib
+    description: Project and organization management API
+    auth_header: X-KBC-ManageApiToken
+    base_url: https://connection.keboola.com
+
+  - name: Generic Extractor API
+    url: https://raw.githubusercontent.com/keboola/generic-extractor/master/apiary.apib
+    output: docs/apiary/generic-extractor-api.apib
+    format: apib
+    description: Generic HTTP API extractor configuration
+
+  - name: Developer Portal API
+    url: https://raw.githubusercontent.com/keboola/developer-portal/main/apiary.apib
+    output: docs/apiary/developer-portal-api.apib
+    format: apib
+    description: Developer portal for component registration
+
+  - name: Orchestrator API
+    url: https://raw.githubusercontent.com/keboola/orchestrator-php-client/master/apiary.apib
+    output: docs/apiary/orchestrator-api.apib
+    format: apib
+    description: Orchestration and scheduling API
+
+  - name: JSON Parser API
+    url: https://raw.githubusercontent.com/keboola/jsonparser-api/main/apiary.apib
+    output: docs/apiary/json-parser-api.apib
+    format: apib
+    description: JSON parsing and flattening service
+
+  # OpenAPI specs from GitHub
+  - name: Stream Service
+    url: https://raw.githubusercontent.com/keboola/keboola-as-code/main/internal/pkg/service/stream/api/openapi/openapi.yaml
+    output: docs/openapi/stream-service.yaml
+    format: openapi
+    description: Continuous data streaming and import service
+
+  - name: Templates Service
+    url: https://raw.githubusercontent.com/keboola/keboola-as-code/main/internal/pkg/service/templates/api/openapi/openapi.yaml
+    output: docs/openapi/templates-service.yaml
+    format: openapi
+    description: Configuration templates service
+
+  - name: AppsProxy Service
+    url: https://raw.githubusercontent.com/keboola/keboola-as-code/main/internal/pkg/service/appsproxy/api/openapi/openapi.yaml
+    output: docs/openapi/appsproxy-service.yaml
+    format: openapi
+    description: Data apps proxy service
+
+  - name: Metastore Service
+    url: https://raw.githubusercontent.com/keboola/go-monorepo/main/services/metastore/api/handlers/docs/openapi.json
+    output: docs/openapi/metastore-service.json
+    format: openapi
+    description: Metadata storage service
+
+  - name: Query Service
+    url: https://raw.githubusercontent.com/keboola/go-monorepo/main/services/query/api/handlers/docs/openapi.json
+    output: docs/openapi/query-service.json
+    format: openapi
+    description: SQL query execution service

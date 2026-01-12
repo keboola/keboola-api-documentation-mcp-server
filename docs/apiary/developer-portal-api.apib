@@ -1,0 +1,1899 @@
+FORMAT: 1A
+HOST: https://apps-api.keboola.com
+
+# Keboola Developer Portal
+
+## Auth [/auth]
+
+User auth is handled by jwt tokens. Token is returned on login call and needs
+to be passed in HTTP header `Authorization: {your token}`. Token has limited
+validity of 1 hour. Login call also returns refresh token which can be exchanged
+for fresh auth token.
+
+
+### Create account [POST /auth/signup]
+
+Anyone can create account but needs to belong to a vendor to be able to manage apps.
+
++ Attributes
+    + name (required)
+    + email (required)
+    + password (required) - must contain at least 8 characters and at least one lowercase letter, one uppercase letter and one number; cannot contain whitespaces
+
++ Request (application/json)
+
+        {
+            "name": "John Doe",
+            "email": "john@keboola.com",
+            "password": "superSecret"
+        }
+
++ Response 201
+
+
+### Confirm account [POST /auth/confirm/{email}/{code}]
+
+Account needs to be confirmed by a code from confirmation email sent on his email address.
+
++ Parameters
+    + email (required)
+    + code (required)
+
++ Response 204
+
+### Resend confirmation code [POST /auth/confirm]
+
++ Attributes
+    + email (required)
+    + password (required)
+
++ Request (application/json)
+
+        {
+            "email": "john@keboola.com",
+            "password": "superSecret"
+        }
+
++ Response 204
+
+
+### Login [POST /auth/login]
+
+Login returns three different tokens.
+
+- `token` - is used to authenticate most of the API calls, is valid for 1 hour
+- `accessToken` - is used to verify MFA setup or for logout, is valid for 1 hour
+- `refreshToken` - is used for refreshing an auth token using the API call below, is valid for 30 days
+
+If your account has active MFA, login with `email` and `password` returns `session` which is used in subsequent login
+call along with the code received in text message.
+
++ Attributes
+    + email (required)
+    + password - if you have activated MFA, use only in the first step
+    + session - if you have activated MFA, use only in the second step
+    + code - if you have activated MFA, use only in the second step
+    + challenge (optional, enum[string]) - if you have activated MFA, use only in the second step
+        + Members
+          + `SMS_MFA`
+          + `SOFTWARE_TOKEN_MFA`
+        + Default: `SOFTWARE_TOKEN_MFA`
+
++ Request (application/json)
+
+        {
+            "email": "john@keboola.com",
+            "password": "superSecret"
+        }
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "token": "{your token}",
+                "accessToken": "{access token}",
+                "refreshToken": "{refresh token}"
+                "expiresIn": 3600
+            }
+
++ Request (application/json)
+
+        {
+            "email": "john@keboola.com",
+            "password": "superSecret"
+        }
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "session": "{session}"
+            }
+
++ Request (application/json)
+
+        {
+            "email": "john@keboola.com",
+            "code": "{code}",
+            "session": "{session}"
+        }
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "token": "{your token}",
+                "accessToken": "{access token}",
+                "refreshToken": "{refresh token}"
+                "expiresIn": 3600
+            }
+
+
+### Logout [POST /auth/logout]
+
+Invalidates all active access and refresh tokens
+
++ Request
+
+    + Headers
+
+            Authorization: {access_token}
+
++ Response 204
+
+
+### Refresh token [GET /auth/token]
+
+Returns fresh auth token and access token in exchange for refresh token received on login.
+
++ Request
+
+    + Headers
+
+            Authorization: {refresh_token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "token": "{your token}",
+                "accessToken": "{your token}",
+                "expiresIn": 3600
+            }
+
+
+### Get user profile [GET /auth/profile]
+
+**Please note that `isMfaEnabled` property in response is deprecated, use `mfa` instead.**
+
+Property `mfa` can contain values `SOFTWARE_TOKEN_MFA`, `SMS_MFA` and `false`.
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "email": "john@keboola.com",
+                "name": "John Doe",
+                "vendors": ["keboola"]
+                "isAdmin": false,
+                "isMfaEnabled": true,
+                "mfa": "SOFTWARE_TOKEN_MFA"
+            }
+
+
+### Reset password [POST /auth/forgot/{email}]
+
+Sends email with confirmation code which has to be used in the next API call
+
++ Parameters
+    + email
+
++ Response 204 (application/json)
+
+
+### Forgot password confirmation [POST /auth/forgot/{email}/confirm]
+
++ Parameters
+    + email
+
++ Attributes
+    + code (required)
+    + password (required)
+
++ Request(application/json)
+
+    + Body
+
+            {
+                "code": "your code from email",
+                "password": "new password"
+            }
+
++ Response 204 (application/json)
+
+### Enable Software MFA [POST /auth/mfa]
+
+Enable login using TOTP software token MFA. The call returns secret code to be entered into a TOTP-generating app such as Google Authenticator
+
++ Attributes
+    + accessToken - access token from login call
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: {your_token}
+
+    + Body
+
+            {
+                "accessToken": "xxxyyy"
+            }
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "secretCode": "xxx"
+            }
+
+### Confirm Software MFA [POST /auth/mfa/confirm]
+
+Confirm multi-factor authentication using code from your TOTP app
+
++ Attributes
+    + accessToken - access token from login call
+    + code from your TOTP app
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: {your_token}
+
+    + Body
+
+            {
+                "accessToken": "xxxyyy",
+                "code": "123456"
+            }
+
++ Response 204 (application/json)
+
+
+## Vendor [/vendors]
+
++ Attributes
+    + name (required)
+    + address (required)
+    + email (required)
+    + projectUrl (optional)
+
++ Model (application/json)
+
+        {
+            "id": "temp_id",
+            "name": "Company ltd.",
+            "address": "410 Terry Ave. North, Seattle, WA",
+            "email": "info@company.com",
+            "type": "other",
+            "projectUrl": "https://connection.keboola.com/admin/projects/313",
+            "isTrusted": true
+        }
+
+### Create a vendor [POST /vendors]
+
+You can create a vendor, however you have to wait for our approval. You will receive an email confirmation once it is done.
+
++ Attributes (Vendor)
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: {your_token}
+
+    + Body
+
+            {
+                "name": "Company ltd.",
+                "address": "410 Terry Ave. North, Seattle, WA",
+                "email": "info@company.com",
+                "type": "other",
+                "projectUrl": "https://connection.keboola.com/admin/projects/313",
+                "isTrusted": true
+            }
+
++ Response 201
+    [Vendor][]
+
+
+### Update a vendor [PATCH /vendors/{vendor}]
+
++ Parameters
+    + vendor
+
++ Attributes (Vendor)
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: {your_token}
+
+    + Body
+
+            {
+                "name": "Company ltd.",
+                "address": "410 Terry Ave. North, Seattle, WA",
+                "email": "info@company.com",
+                "type": "other",
+                "projectUrl": "https://connection.keboola.com/admin/projects/313",
+                "isTrusted": true
+            }
+
++ Response 200
+    [Vendor][]
+
+
+### Request to join a vendor [POST /vendors/{vendor}/users]
+
+Request to join a vendor. You will receive an email confirmation once it is approved.
+
++ Parameters
+    + vendor
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 204 (application/json)
+
+### Accept request to join a vendor [POST /vendors/{vendor}/users/{username}]
+
++ Parameters
+    + vendor
+    + username
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 204 (application/json)
+
+### Invite user to a vendor [POST /vendors/{vendor}/invitations/{email}]
+
+Sends an email with a link to accept the invitation.
+
++ Parameters
+    + vendor
+    + email
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 204
+
+
+### Accept invitation to a vendor [GET /vendors/{vendor}/invitations/{email}/{code}]
+
+Link to this resource is sent to an email.
+
++ Parameters
+    + vendor
+    + email
+    + code - verification code
+
++ Response 200 (text/html)
+
+
+### Remove user from a vendor or delete service account [DELETE /vendors/{vendor}/users/{username}]
+
+Remove other user or yourself from the vendor, service account will be deleted instead
+
++ Parameters
+    + vendor
+    + username
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 204
+
+
+### Create service account [POST /vendors/{vendor}/credentials]
+
+Generates a service account which can be used e.g. for continuous integration and returns its username and password.
+
++ Parameters
+    + vendor
+
++ Attributes
+    + name (required) - It can only contain a-z, A-Z, 0-9, and underscore _ and has max length 64 chars
+    + description (optional) - Max length 256 chars
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: {your_token}
+
+    + Body
+
+            {
+                "description": "Service user for Travis CI"
+            }
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "username": "service.{vendor}.{id}",
+                "password": "{password}",
+                "description": "Service user for Travis CI",
+                "createdOn": ""
+            }
+
+
+### List users [GET /vendors/{vendor}/users?service={service}&offset={offset}&limit={limit}]
+
+Lists all regular users or service accounts of the vendor.
+
++ Parameters
+    + vendor
+    + service (optional) - list service accounts instead of regular users
+        + Default: 0
+    + offset (optional) - pagination offset
+        + Default: 0
+    + limit (optional) - pagination limit
+        + Default: 1000
+
++ Request
+
+    + Headers
+
+            Authorization: {token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "username": "test@keboola.com",
+                    "name": "Test User",
+                    "createdOn": "",
+                    "vendors": ["keboola"]
+                }
+            ]
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "username": "keboola+service",
+                    "description": "Service Account for Travis CI",
+                    "createdOn": ""
+                }
+            ]
+
+### List join requests [GET /vendors/{vendor}/user-requests?offset={offset}&limit={limit}]
+
+Lists requests to join the vendor.
+
++ Parameters
+    + vendor
+    + offset (optional) - pagination offset
+        + Default: 0
+    + limit (optional) - pagination limit
+        + Default: 1000
+
++ Request
+
+    + Headers
+
+            Authorization: {token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "username": "test@keboola.com",
+                    "createdOn": ""
+                }
+            ]
+
+
+## App [/vendors/{vendor}/apps]
+
+Manual approval from Keboola is required before an app is allowed to be published.
+Apps can be created and updated freely before requesting the approval.
+
+App needs to have a **128px** icon in png format uploaded to S3. You get pre-signed upload url from
+`/apps/{vendor}/{app}/icon` API call. Please note that older apps do not have to have a 128px icon.
+
+Apps are automatically versioned after each change. You can rollback to previous
+version any time.
+
+You may publish the app in specific KBC stacks only by their enumerating in `permissions` attribute. List of available
+stacks can be [fetched here](#reference/0/public-api/list-stacks). You may also exclude the app from public listing and
+specify KBC project ids where it will be available.
+
++ Attributes
+    + name (required) - Do not use the word `extractor` or `writer` in your app
+    + type (required) - Component type
+        + type (enum[string])
+            + Members
+                + `extractor`
+                + `application`
+                + `writer`
+                + `processor`
+                + `code-pattern`
+                + `other`
+    + repository (optional, object)
+        + type (enum[string])
+            + Members
+                + `dockerhub`
+                + `quay`
+                + `builder`
+                + `ecr`
+        + uri (optional) - Image uri in the repository, e.g. `keboola/adwords-extractor`
+        + tag (optional) - Tag of the image in the repository; typically `latest` or `master` or `1.0.0`
+        + options (optional, object) - additional settings for specific repositories
+            + username (optional) - For private repositories
+            + #password (optional) - For private repositories
+            + server (optional) - Custom server for private DockerHub
+            + region (optional) - AWS region for ECR repository
+    + shortDescription (optional) - One sentence describing your app or the app you are integrating
+    + longDescription (optional) - Markdown describing what the component does (shown on the application intro page)
+    + licenseUrl (optional) - Can be included in your public source repository
+    + documentationUrl (optional) - Instructions to help end-user configure the application (linked from application configuration page) and payment information (if any)
+    + sourceCodeUrl (optional) - Link to app's source code (public or private, it is mainly for app's authors)
+    + encryption (optional, boolean) - All parameter attributes with keys prefixed by `#` will be encrypted. If you pass sensitive data in configuration (credentials, tokens), it is encouraged to turn the encryption on
+        + Default: `false`
+    + defaultBucket (optional, boolean) - All tables should be uploaded to a pre-generated bucket
+        + Default: `false`
+    + network (optional, enum[string]) - Type of connection to outer network
+        + Members
+            + `none`
+            + `bridge`
+        + Default: `bridge`
+    + defaultBucketStage (optional, enum[string])
+        + Members
+            + `in`
+            + `out`
+        + Default: `in`
+    + uiOptions (optional, array) - Which UI helpers to use
+        + Members
+            + `genericUI` - show editation field for JSON of root node of the configuration
+            + `genericDockerUI` - show editation field for JSON of `parameters` node of the configuration or show edit form if there is a configuration schema
+            + `genericDockerUI-runtime` - show editation field for JSON of `runtime` node of the configuration
+            + `genericDockerUI-tableInput` - UI editor for tables input mapping, it is saved to `storage.input.tables` node
+            + `genericDockerUI-fileInput` - UI editor for files input mapping, it is saved to `storage.input.files` node
+            + `genericDockerUI-tableOutput` - UI editor for tables output mapping, it is saved to `storage.output.tables` node
+            + `genericDockerUI-fileOutput` - UI editor for files output mapping, it is saved to `storage.output.files` node
+            + `genericDockerUI-authorization` - show button for oauth flow (the app needs to have oauth-v2 integrated and have `genericDockerUI` flag)
+            + `genericDockerUI-processors` - show a JSON input to edit the processors node of the configuration
+            + `genericShinyUI` - initial UI for shiny applications configuration
+            + `genericTemplatesUI` - show editation field for JSON of `params` without jobs according to appropriate schema from https://github.com/keboola/kbc-ui-templates
+            + `appInfo.dataIn` - show visual notification that the app imports data from outside network
+            + `appInfo.dataOut` - show visual notification that the app exports data to outside network
+            + `deprecated` - add deprecation message to the app page in KBC and disable adding new configurations
+            + `excludeRun` - hide Run button for its configurations in KBC
+    + imageParameters (optional, object) - JSON object with arbitrary parameters passed to the application. They cannot be modified by the end-user. The typical use for this section are global application parameters (such as token, URL, version of your API).
+    + stackParameters (optional, object) - JSON object with arbitrary parameters passed to the specific stacks of the application. Should contain keys of stack name with the parameters.
+    + testConfiguration (optional, object) - JSON configuration to test the application
+    + configurationSchema (optional, object) - JSON schema describing the configuration
+    + configurationRowSchema (optional, object) - JSON schema describing the configuration row
+    + createConfigurationRowSchema (optional, object) - JSON schema describing the form for row creation
+    + configurationDescription (optional) - Markdown explaining the configuration. Use headlines level 3 or higher (h3, h4, …)
+    + emptyConfiguration (optional, object) - Default configuration
+    + emptyConfigurationRow (optional, object) - Default configuration for row
+    + actions (optional, array) - List of supported sync actions
+        + Default: `run`
+    + fees (optional, boolean) - Using the component in KBC implies additional fees
+        + Default: `false`
+    + limits (optional) - Description of service or usage limits. Define what is maximum expected usage of your component. This may vary depending on the memory/time limits, API usage limits and other factors.
+    + logger (optional, enum[string]) - Specify a way to log events from your application
+        + Members
+            + `standard`
+            + `gelf`
+        + Default: `standard`
+    + loggerConfiguration (optional, object) - Additional configuration for logger. Format for `gelf` logger looks like `{transport: 'tcp'}`
+    + stagingStorageInput (optional, enum[string])
+        + Members
+            + `abs`
+            + `local`
+            + `none`
+            + `s3`
+            + `workspace-exasol`
+            + `workspace-redshift`
+            + `workspace-snowflake`
+            + `workspace-synapse`
+            + `workspace-teradata`
+            + `workspace-bigquery`
+
+        + Default: `local`
+    + stagingStorageOutput (optional, enum[string])
+        + Members
+            + `local`
+            + `none`
+            + `workspace-exasol`
+            + `workspace-redshift`
+            + `workspace-snowflake`
+            + `workspace-synapse`
+            + `workspace-teradata`
+            + `workspace-bigquery`
+        + Default: `local`
+    + permissions (optional, array) - List of specific permissions for the app. You may choose specific KBC stacks
+        + (object)
+            + stack (string, required) - name of the stack
+            + organizations (array, optional) - ids of KBC organizations where the app will be available. It is supposed that the app will be excluded from public listing by setting `isPublic=false`
+
++ Model (application/json)
+
+        {
+            "id": "keboola.ex-adwords",
+            "name": "Google Adwords Reports",
+            "version": 2,
+            "type": "extractor",
+            "repository": {
+                "type": "quay",
+                "uri": "https://quay.io/repository/keboola/adwords-extractor",
+                "tag": "latest",
+                "digest": "sha_digest"
+            },
+            "shortDescription": "Advertise with Google Ads",
+            "longDescription": "This extractor allows you to download Google AdWords reports defined by AWQL queries.",
+            "icon": {
+                "32": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-32.png",
+                "64": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-64.png",
+                "128": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-128.png"
+            },
+            "licenseUrl": "https://github.com/keboola/adwords-extractor/LICENSE",
+            "documentationUrl": "https://github.com/keboola/adwords-extractor/README",
+            "sourceCodeUrl": "https://github.com/keboola/adwords-extractor",
+            "requiredMemory": null,
+            "processTimeout": null,
+            "features": [],
+            "encryption": true,
+            "network": "bridge",
+            "defaultBucket": false,
+            "defaultBucketStage": "in",
+            "forwardToken": false,
+            "forwardTokenDetails": false,
+            "injectEnvironment": false,
+            "complexity": "easy",
+            "category": null,
+            "categories": [],
+            "imageParameters": {},
+            "stackParameters": {
+                "connection.keboola.com": {
+                    "#encrypted": "encrypted_us"
+                },
+                "connection.eu-central-1.keboola.com": {
+                    "#encrypted": "encrypted_eu",
+                    "nested": {
+                        "key": "value"
+                    }
+                },
+            },
+            "uiOptions": [
+                "genericUI",
+                "genericDockerUI-authorization"
+            ],
+            "testConfiguration": null,
+            "configurationSchema": null,
+            "configurationRowSchema": null,
+            "createConfigurationRowSchema": null,
+            "configurationDescription": null,
+            "configurationFormat": "json",
+            "emptyConfiguration": null,
+            "emptyConfigurationRow": null,
+            "actions": [],
+            "fees": false,
+            "limits": null,
+            "logger": "standard",
+            "loggerConfiguration": null,
+            "stagingStorageInput": "local",
+            "createdOn": "2016-09-09T09:26:15.000Z",
+            "createdBy": "keboola.dev.portal.test@gmail.com",
+            "isPublic": false,
+            "isPublished": true,
+            "permissions": [
+                {
+                    "stack": "connection.keboola.com"
+                }
+            ],
+            "vendor": {
+                "id": "keboola",
+                "name": "Keboola",
+                "address": "Křižíkova 488/115, Praha",
+                "email": "support@keboola.com",
+                "type": "other"
+            },
+            "publishingStatus": "private",
+            "publishingRequest": {
+                "createdBy": "",
+                "createdOn": "",
+                "rejectionReason": ""
+            }
+        }
+
+
+### Create app [POST /vendors/{vendor}/apps]
+
+After the app is created, its id is prefixed by vendor. E.g. if you identify
+the app as `ex-adwords`, its identifier for subsequent API calls will be
+`keboola.ex-adwords`.
+
++ Parameters
+    + vendor - vendor under which the app should be created
+
++ Attributes (App)
+    + id (required) - Identifier of the app, allowed characters are unaccented letters, numbers, dashes and underscores. Length should be between 3 and 30.
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: {your_token}
+
+    + Body
+
+            {
+                "id": "ex-adwords",
+                "name": "AdWords Reports",
+                "shortDescription": "Reads reports defined by awql queries"
+            }
+
++ Response 201
+    [App][]
+
+
+### Update app [PATCH /vendors/{vendor}/apps/{app}]
+
++ Parameters
+    + vendor
+    + app - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
+
++ Attributes (App)
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: {your_token}
+
+    + Body
+
+            {
+                "id": "ex-adwords",
+                "name": "AdWords Reports",
+                "shortDescription": "Reads reports defined by awql queries"
+            }
+
++ Response 200
+    [App][]
+
+
+### Delete app [DELETE /vendors/{vendor}/apps/{app}]
+
++ Parameters
+    + vendor
+    + app - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 204
+
+
+### Deprecate app [POST /vendors/{vendor}/apps/{app}/deprecate]
+
+This call sets `isDeprecated` flag to `true` and `isPublic` to `false`. The app is hidden from the list of new
+extractors / writers in the ui and deprecation warning is shown within list of existing app configurations. In addition
+you can set date of expiration when you want the app to be switched off and replacement to this app if any.
+
++ Parameters
+    + vendor
+    + app
+
++ Attributes
+    + expiredOn (optional) - date when the app is expected to be shut down, in format YYYY-mm-dd
+    + replacementApp (optional) - id of app which is expected to replace this one
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: {your_token}
+
+    + Body
+
+            {
+                "expiredOn": "2017-12-12"
+            }
+
++ Response 200
+    [App][]
+
+
+### Generate link for icon upload [POST /vendors/{vendor}/apps/{app}/icon]
+
+API call generates pre-signed url to S3. You can upload e.g. using such curl command:
+`curl -H "Content-Type:image/png" --upload-file file.png "https://...."`
+
+The icon should have dimensions 128x128px or it will be resized after upload.
+
++ Parameters
+    + vendor
+    + app - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "link": "https://dev-portal-icons.s3.amazonaws.com/keboola.ex-adwords-v2-64.png?AWSAccessKeyId=%7BaccessKey%7D&Content-Type=image%2Fpng&Expires=1471018587&Signature=%7Bsignature%7D&x-amz-security-token=%7Btoken%7D",
+                "expiresIn": "3600"
+            }
+
+
+### Request publishing [POST /vendors/{vendor}/apps/{app}/publish]
+
+This is a request for publishing the app to public listing. It will be sent only if the app has an icon uploaded and all
+these attributes set:
+- name
+- type
+- repository
+- shortDescription
+- longDescription
+- licenseUrl
+- documentationUrl
+
+The component will undergo manual review according to [this guidelines](https://developers.keboola.com/extend/publish/#component-review).
+
++ Parameters
+    + vendor
+    + app - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 200
+    [App][]
+
+
+### List all vendor apps [GET /vendors/{vendor}/apps?offset={offset}&limit={limit}]
+
++ Parameters
+    + vendor
+    + offset (optional) - pagination offset
+        + Default: 0
+    + limit (optional) - pagination limit
+        + Default: 1000
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "id": "keboola.ex-adwords",
+                    "version": 2,
+                    "name": "Google Adwords Reports",
+                    "type": "extractor",
+                    "createdOn": "2016-09-09T09:26:15.000Z",
+                    "createdBy": "keboola.dev.portal.test@gmail.com",
+                    "isPublic": false,
+                    "legacyUri": null,
+                    "icon": {
+                        "32": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-32.png",
+                        "64": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-64.png",
+                        "128": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-128.png"
+                    }
+                }
+            ]
+
+
+### Get app detail [GET /vendors/{vendor}/apps/{app}]
+
++ Parameters
+    + vendor
+    + app
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 200
+    [App][]
+
+
+### List versions [GET /vendors/{vendor}/apps/{app}/versions?offset={offset}&limit={limit}]
+
++ Parameters
+    + vendor
+    + app
+    + offset (optional) - pagination offset
+        + Default: 0
+    + limit (optional) - pagination limit
+        + Default: 1000
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "id": "keboola.ex-adwords",
+                    "version": "1.0.2",
+                    "name": "AdWords Extractor",
+                    "type": "extractor",
+                    "repository": {
+                        "type": "quay",
+                        "uri": "https://quay.io/repository/keboola/adwords-extractor",
+                        "tag": "latest",
+                    },
+                    "shortDescription": null,
+                    "longDescription": null,
+                    "licenseUrl": null,
+                    "documentationUrl": null,
+                    "sourceCodeUrl": null,
+                    "requiredMemory": null,
+                    "processTimeout": null,
+                    "features": [],
+                    "encryption": false,
+                    "network": "bridge",
+                    "defaultBucket": false,
+                    "defaultBucketStage": "in",
+                    "forwardToken": false,
+                    "forwardTokenDetails": false,
+                    "injectEnvironment": false,
+                    "complexity": "easy",
+                    "category": null,
+                    "categories": [],
+                    "uiOptions": [],
+                    "imageParameters": {},
+                    "stackParameters": {},
+                    "testConfiguration": {},
+                    "configurationSchema": {},
+                    "configurationRowSchema": {},
+                    "createConfigurationRowSchema": {},
+                    "configurationDescription": null,
+                    "configurationFormat": "json",
+                    "emptyConfiguration": {},
+                    "emptyConfigurationRow": {},
+                    "actions": [],
+                    "fees": false,
+                    "limits": null,
+                    "logger": "standard",
+                    "loggerConfiguration": {},
+                    "stagingStorageInput": "local",
+                    "icon": {
+                        "32": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-32.png",
+                        "64": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-64.png",
+                        "128": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-128.png"
+                    },
+                    "vendor": {
+                        "id": "keboola",
+                        "name": "Keboola",
+                        "address": "Křižíkova 488/115, Praha",
+                        "email": "support@keboola.com",
+                        "type": "other"
+                    },
+                }
+            ]
+
+
+### Get version detail [GET /vendors/{vendor}/apps/{app}/versions/{version}]
+
++ Parameters
+    + vendor
+    + app - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
+    + version
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "id": "keboola.ex-adwords",
+                "version": "1.0.2",
+                "name": "AdWords Extractor",
+                "type": "extractor",
+                "repository": {
+                    "type": "quay",
+                    "uri": "https://quay.io/repository/keboola/adwords-extractor",
+                    "tag": "latest",
+                },
+                "shortDescription": null,
+                "longDescription": null,
+                "licenseUrl": null,
+                "documentationUrl": null,
+                "sourceCodeUrl": null,
+                "requiredMemory": null,
+                "processTimeout": null,
+                "features": [],
+                "encryption": false,
+                "network": "bridge",
+                "defaultBucket": false,
+                "defaultBucketStage": "in",
+                "forwardToken": false,
+                "forwardTokenDetails": false,
+                "injectEnvironment": false,
+                "complexity": "easy",
+                "category": null,
+                "categories": [],
+                "uiOptions": [],
+                "imageParameters": {},
+                "testConfiguration": {},
+                "configurationSchema": {},
+                "configurationRowSchema": {},
+                "createConfigurationRowSchema": {},
+                "configurationDescription": null,
+                "configurationFormat": "json",
+                "emptyConfiguration": {},
+                "emptyConfigurationRow": {},
+                "actions": [],
+                "fees": false,
+                "limits": null,
+                "logger": "standard",
+                "loggerConfiguration": {},
+                "stagingStorageInput": "local",
+                "vendor": {
+                    "id": "keboola",
+                    "name": "Keboola",
+                    "address": "Křižíkova 488/115, Praha",
+                    "email": "support@keboola.com",
+                    "type": "other"
+                },
+                "icon": {
+                    "32": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-32.png",
+                    "64": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-64.png",
+                    "128": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-128.png"
+                }
+            }
+
+
+### Rollback version [POST /vendors/{vendor}/apps/{app}/versions/{version}/rollback]
+
+Takes settings from chosen version and creates new version with it.
+
++ Parameters
+    + vendor
+    + app
+    + version
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 201
+
+
+### Get credentials to ECR repository [GET /vendors/{vendor}/apps/{app}/repository]
+
+Returns credentials for `docker` commands valid for 12 hours. It initiates the repository if it does not exist.
+
++ Parameters
+    + vendor
+    + app
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "registry": "https://061240556736.dkr.ecr.eu-west-1.amazonaws.com",
+                "repository": "developer-portal/ex-adwords",
+                "credentials": {
+                    "username": "AWS",
+                    "password": "pass"
+                }
+            }
+
+
+
+## Public API [/apps]
+
+### List published apps [GET /apps?offset={offset}&limit={limit}]
+
+Shows all apps having flags `isPublic` set to `true`.
+
++ Parameters
+    + offset (optional) - pagination offset
+        + Default: 0
+    + limit (optional) - pagination limit
+        + Default: 1000
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "id": "keboola.ex-adwords",
+                    "vendor": "keboola",
+                    "name": "Google Adwords Reports",
+                    "type": "extractor",
+                    "shortDescription": "Advertise with Google Ads",
+                    "version": "1.0.2",
+                    "icon": {
+                        "32": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-32.png",
+                        "64": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-64.png",
+                        "128": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-128.png"
+                    }
+                }
+            ]
+
+
+### Get app detail [GET /apps/{app}]
+
+Shows the app if its flag `isPublic` is set to `true`
+
++ Parameters
+    + app
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "id": "keboola.ex-adwords",
+                "name": "Google Adwords Reports",
+                "vendor": {
+                    "id": "keboola",
+                    "name": "Keboola",
+                    "address": "Křižíkova 488/115, Praha",
+                    "email": "support@keboola.com",
+                    "type": "other"
+                },
+                "current_version": "1.0.2",
+                "type": "extractor",
+                "repository": {
+                    "type": "quay",
+                    "uri": "https://quay.io/repository/keboola/adwords-extractor",
+                    "tag": "latest",
+                },
+                "shortDescription": "Advertise with Google Ads",
+                "longDescription": "This extractor allows you to download Google AdWords reports defined by AWQL queries.",
+                "icon": {
+                    "32": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-32.png",
+                    "64": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-64.png",
+                    "128": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-128.png"
+                },
+                "licenseUrl": "https://github.com/keboola/adwords-extractor/LICENSE",
+                "documentationUrl": "https://github.com/keboola/adwords-extractor/README",
+                "sourceCodeUrl": "https://github.com/keboola/adwords-extractor",
+                "requiredMemory": null,
+                "processTimeout": null,
+                "features": [],
+                "encryption": true,
+                "network": "bridge",
+                "defaultBucket": false,
+                "defaultBucketStage": "in",
+                "forwardToken": false,
+                "forwardTokenDetails": false,
+                "injectEnvironment": false,
+                "complexity": "easy",
+                "category": null,
+                "categories": [],
+                "uiOptions": [
+                    "genericUI",
+                    "genericDockerUI-authorization"
+                ],
+                "imageParameters": {},
+                "stackParameters": {},
+                "testConfiguration": {},
+                "configurationSchema": {},
+                "configurationRowSchema": {},
+                "createConfigurationRowSchema": {},
+                "configurationDescription": null,
+                "configurationFormat": "json",
+                "emptyConfiguration": {},
+                "emptyConfigurationRow": {},
+                "actions": [],
+                "fees": false,
+                "limits": null,
+                "logger": "standard",
+                "loggerConfiguration": {},
+                "stagingStorageInput": "local"
+            }
+
+
+### List vendors [GET /vendors?offset={offset}&limit={limit}]
+
++ Parameters
+    + offset (optional) - pagination offset
+        + Default: 0
+    + limit (optional) - pagination limit
+        + Default: 1000
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "id": "keboola",
+                    "name": "Keboola",
+                    "address": "Křižíkova 488/115, Prague, CZ",
+                    "email": "support@keboola.com",
+                    "type": "other",
+                    "projectUrl": "https://connection.keboola.com/admin/projects/313",
+                    "isTrusted": true
+                }
+            ]
+
+
+### Get vendor detail [GET /vendors/{vendor}]
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "id": "keboola",
+                "name": "Keboola",
+                "address": "Křižíkova 488/115, Prague, CZ",
+                "email": "support@keboola.com",
+                "type": "other",
+                "projectUrl": "https://connection.keboola.com/admin/projects/313",
+                "isTrusted": true
+            }
+
+## Admin Stacks [/admin/stacks]
+
+### List stacks [GET /admin/stacks]
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                "connection.keboola.com",
+                "connection-eu-west-1.keboola.com"
+            ]
+
+## Admin Users [/admin/users]
+
+### List users [GET /admin/users?offset={offset}&limit={limit}]
+
+List all user accounts
+
++ Parameters
+    + offset (optional) - pagination offset
+        + Default: 0
+    + limit (optional) - pagination limit
+        + Default: 1000
+
++ Request
+
+    + Headers
+
+            Authorization: {admin_token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "username": "test@keboola.com",
+                    "name": "Test User",
+                    "createdOn": "",
+                    "vendors": ["keboola"]
+                }
+            ]
+
+### Disable user MFA [DELETE /admin/users/{username}/mfa]
+
++ Parameters
+    + username
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 204
+
+### Delete user [DELETE /admin/users/{username}]
+
++ Parameters
+    + username
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 204
+
+### Add user to a vendor [POST /admin/users/{username}/vendors/{vendor}]
+
+It will send email confirmation to a user.
+
++ Parameters
+    + username
+    + vendor
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 204
+
+
+### Remove user from a vendor [DELETE /admin/users/{username}/vendors/{vendor}]
+
+It will send email confirmation to a user.
+
++ Parameters
+    + username
+    + vendor
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 204
+
+
+### Make user admin [POST /admin/users/{username}/admin]
+
++ Parameters
+    + username
+
++ Request
+
+    + Headers
+
+            Authorization: {admin_token}
+
++ Response 204
+
+
+### Remove admin privilege [DELETE /admin/users/{username}/admin]
+
++ Parameters
+    + username
+
++ Request
+
+    + Headers
+
+            Authorization: {admin_token}
+
++ Response 204
+
+
+## Admin Apps [/admin/apps]
+
++ Model (application/json)
+
+        {
+            "id": "keboola.ex-adwords",
+            "name": "Google Adwords Reports",
+            "version": 2,
+            "type": "extractor",
+            "repository": {
+                "type": "quay",
+                "uri": "https://quay.io/repository/keboola/adwords-extractor",
+                "tag": "latest",
+                "digest": "sha_digest"
+            },
+            "shortDescription": "Advertise with Google Ads",
+            "longDescription": "This extractor allows you to download Google AdWords reports defined by AWQL queries.",
+            "icon": {
+                "32": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-32.png",
+                "64": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-64.png",
+                "128": "https://s3.amazonaws.com/dev-portal-icons/keboola.ex-adwords-v2/1.0.2-128.png"
+            },
+            "vendor": {
+                "id": "keboola",
+                "name": "Keboola",
+                "address": "Křižíkova 488/115, Praha",
+                "email": "support@keboola.com"
+            },
+            "licenseUrl": "https://github.com/keboola/adwords-extractor/LICENSE",
+            "documentationUrl": "https://github.com/keboola/adwords-extractor/README",
+            "sourceCodeUrl": "https://github.com/keboola/adwords-extractor",
+            "requiredMemory": null,
+            "processTimeout": null,
+            "features": [],
+            "encryption": true,
+            "network": "bridge",
+            "defaultBucket": false,
+            "defaultBucketStage": "in",
+            "forwardToken": false,
+            "forwardTokenDetails": false,
+            "injectEnvironment": false,
+            "complexity": "easy",
+            "category": null,
+            "categories": [],
+            "uiOptions": [
+                "genericUI",
+                "genericDockerUI-authorization"
+            ],
+            "imageParameters": {},
+            "stackParameters": {},
+            "testConfiguration": {},
+            "configurationSchema": {},
+            "configurationRowSchema": {},
+            "createConfigurationRowSchema": {},
+            "configurationDescription": null,
+            "configurationFormat": "json",
+            "emptyConfiguration": {},
+            "emptyConfigurationRow": {},
+            "actions": [],
+            "fees": false,
+            "limits": null,
+            "logger": "standard",
+            "loggerConfiguration": {},
+            "stagingStorageInput": "local",
+            "createdOn": "2016-09-09T09:26:15.000Z",
+            "createdBy": "keboola.dev.portal.test@gmail.com",
+            "isPublic": false,
+            "isPublished": true,
+            "permissions": [
+                {
+                    "stack": "connection.keboola.com"
+                }
+            ]
+        }
+
+
+### List apps [GET /admin/apps]
+
++ Request
+
+    + Headers
+
+            Authorization: {admin_token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "id": "ag-forecastio",
+                    "version": 1,
+                    "name": "Forecast.io Augmentation",
+                    "type": "extractor",
+                    "createdOn": "2016-09-26T16:02:57.000Z",
+                    "createdBy": "support@keboola.com"
+                }
+            ]
+
+
+### Get app detail [GET /admin/apps/{app}]
+
++ Parameters
+    + app
+
++ Request
+
+    + Headers
+
+            Authorization: {your_token}
+
++ Response 200
+    [App][]
+
+
+
+### Update app [PATCH /admin/apps/{app}]
+
+Allows to update apps across vendors
+
++ Parameters
+    + app - id of the application, it is prefixed by vendor id, e.g. `keboola.ex-adwords`
+
++ Attributes
+    + name (optional) - Do not use the word `extractor` or `writer` in your app
+    + type (optional) - Component type
+        + type (enum[string])
+            + Members
+                + `extractor`
+                + `application`
+                + `writer`
+                + `processor`
+                + `code-pattern`
+                + `other`
+    + repository (optional, object)
+        + type (enum[string])
+            + Members
+                + `dockerhub`
+                + `quay`
+                + `ecr`
+                + `builder`
+        + uri (optional) - Image uri in the repository, e.g. `keboola/adwords-extractor`
+        + tag (optional) - Tag of the image in the repository; typically `latest` or `master` or `1.0.0`
+        + options (optional, object) - additional settings for specific repositories
+            + username (optional) - For private repositories
+            + #password (optional) - For private repositories
+            + server (optional) - Custom server for private DockerHub
+            + region (optional) - AWS region for ECR repository
+        + digest (optional, string) - image digest, obtained automatically from repository after update of repository settings
+    + shortDescription (optional) - One sentence describing your app or the app you are integrating
+    + longDescription (optional) - Markdown or a link to a markdown document describing what the component does (shown on the application intro page)
+    + licenseUrl (optional) - Can be included in your public source repository
+    + documentationUrl (optional) - Instructions to help end-user configure the application (linked from application configuration page) and payment information (if any)
+    + sourceCodeUrl (optional) - Link to app's source code (public or private, it is mainly for app's authors)
+    + encryption (optional, boolean) - All parameter attributes with keys prefixed by `#` will be encrypted. If you pass sensitive data in configuration (credentials, tokens), it is encouraged to turn the encryption on
+        + Default: `false`
+    + network (optional, enum[string]) - Type of connection to outer network
+        + Members
+            + `none`
+            + `bridge`
+        + Default: `bridge`
+    + defaultBucket (optional, boolean) - All tables should be uploaded to a pre-generated bucket
+        + Default: `false`
+    + defaultBucketStage (optional, enum[string])
+        + Members
+            + `in`
+            + `out`
+        + Default: `in`
+    + uiOptions (optional, array) - Which UI helpers to use
+        + Members
+            + `tableInput`
+            + `tableOutput`
+            + `fileInput`
+            + `fileOutput`
+    + imageParameters (optional, object) - JSON object with arbitrary parameters passed to the application. They cannot be modified by the end-user. The typical use for this section are global application parameters (such as token, URL, version of your API).
+    + stackParameters (optional, object) - JSON object with arbitrary parameters passed to the specific stacks of the application. Should contain keys of stack name with the parameters.
+    + testConfiguration (optional, object) - JSON configuration to test the application
+    + configurationSchema (optional, object) - JSON schema describing the configuration
+    + configurationRowSchema (optional, object) - JSON schema describing the configuration row
+    + createConfigurationRowSchema (optional, object) - JSON schema describing the form for row creation
+    + configurationDescription (optional) - Markdown explaining the configuration. Use headlines level 3 or higher (h3, h4, …)
+    + emptyConfiguration (optional, object) - Default configuration
+    + emptyConfigurationRow (optional, object) - Default configuration for row
+    + actions (optional, array) - List of supported actions
+        + Default: `run`
+    + fees (optional, boolean) - Using the component in KBC implies additional fees
+        + Default: `false`
+    + limits (optional) - Description of service or usage limits. Define what is maximum expected usage of your component. This may vary depending on the memory/time limits, API usage limits and other factors.
+    + logger (optional, enum[string]) - Specify a way to log events from your application
+        + Members
+            + `standard`
+            + `gelf`
+        + Default: `standard`
+    + loggerConfiguration (optional, object) - Additional configuration for logger. Format for `gelf` logger looks like `{transport: 'tcp'}`
+    + stagingStorageInput (optional, enum[string])
+       + Members
+           + `local`
+           + `s3`
+           + `none`
+        + Default: `local`
+    + vendor (optional, string)
+    + forwardToken (optional, boolean)
+    + forwardTokenDetails (optional, boolean)
+    + injectEnvironment (optional, boolean)
+    + complexity (optional, enum[string])
+        + Members
+            + `easy`
+            + `medium`
+            + `hard`
+        + Default: `null`
+    + category (optional, string) - **Deprecated**
+    + categories (optional, array[string]) - List of categories
+    + requiredMemory (optional, string)
+    + processTimeout (optional, number)
+    + features (optional, array[string]) - List of feature flags
+    + legacyUri (optional, string)
+    + configurationFormat (optional, enum[string])
+        + Members
+            + `json`
+            + `yaml`
+        + Default: `json`
+    + isPublic (optional, boolean) - Flag setting whether the app should be publicly visible
+        + Default: `false`
+    + permissions (optional, array) - List of specific permissions for the app. You may choose specific KBC stacks
+        + (object)
+            + stack (string, required) - name of the stack
+            + organizations (array, optional) - ids of KBC organizations where the app will be available. It is supposed that the app will be excluded from public listing by setting `isPublic=false`
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: {your_token}
+
+    + Body
+
+            {
+                "shortDescription": "Reads reports defined by awql queries"
+            }
+
++ Response 200
+    [App][]
+
+
+### Approve app publishing [POST /admin/apps/{app}/publish]
+
++ Parameters
+    + app
+
++ Request
+
+    + Headers
+
+            Authorization: {admin_token}
+
++ Response 200
+    [App][]
+
+### Reject app publishing [POST /admin/apps/{app}/reject]
+
++ Parameters
+    + app
+
++ Request
+
+    + Headers
+
+            Authorization: {admin_token}
+
++ Response 200
+    [App][]
+
+### List app changes [GET /admin/changes?since={since}&until={until}&appId={appId}]
+
+Returns list of last changes across all apps or specified app only.
+
++ Parameters
+    + since (optional) - Date in YYYY-MM-DD format, default is `-24 hours`
+    + until (optional) - Date in YYYY-MM-DD format, default is `now`
+    + appId (optional) - Return changes for the specified app only
+
++ Request
+
+    + Headers
+
+            Authorization: {admin_token}
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "id": "test.test-app",
+                    "createdOn": "2017-02-22T15:59:22.000Z",
+                    "createdBy": "upload",
+                    "changes": [
+                        {
+                            "attribute": "icon32",
+                            "oldValue": null,
+                            "newValue": "test.test-app/32/2.png",
+                            "description": "Attribute icon32 changed"
+                        },
+                        {
+                            "attribute": "icon64",
+                            "oldValue": null,
+                            "newValue": "test.test-app/64/2.png",
+                            "description": "Attribute icon64 changed"
+                        }
+                    ]
+                },
+                {
+                    "id": "test.test-app",
+                    "createdOn": "2017-02-22T15:50:30.000Z",
+                    "createdBy": "keboola.dev.portal.test@gmail.com",
+                    "changes": [
+                        {
+                            "attribute": "id",
+                            "oldValue": null,
+                            "newValue": "test.test-app",
+                            "description": "App test.test-app created"
+                        }
+                    ]
+                }
+            ]
+
+
+## Admin Vendors [/admin/vendors]
+
+### List vendors [GET /admin/vendors?offset={offset}&limit={limit}]
+
++ Parameters
+    + offset (optional) - pagination offset
+        + Default: 0
+    + limit (optional) - pagination limit
+        + Default: 1000
+
++ Response 200 (application/json)
+
+    + Body
+
+            [
+                {
+                    "id": "keboola",
+                    "name": "Keboola",
+                    "address": "Křižíkova 488/115, Prague, CZ",
+                    "email": "support@keboola.com",
+                    "type": "other",
+                    "projectUrl": "https://connection.keboola.com/admin/projects/313",
+                    "isPublic": true,
+                    "isApproved": true,
+                    "isTrusted": true
+                }
+            ]
+
+### Create a vendor [POST /admin/vendors]
+
++ Attributes
+    + id (required) - Vendor id, it will be used as a prefix for app ids. Max length is 32.
+    + name (required) - Vendor name, max length 128
+    + address (required) - Vendor address
+    + email (required) - Contact email
+    + projectUrl (optional) - Url to test project in KBC
+
++ Request
+
+    + Headers
+
+            Authorization: {admin_token}
+
+    + Body
+
+            {
+                "id": "company",
+                "name": "Company ltd.",
+                "address": "410 Terry Ave. North, Seattle, WA",
+                "email": "info@company.com",
+                "type": "other",
+                "projectUrl": "https://connection.keboola.com/admin/projects/313",
+                "isTrusted": true
+            }
+
++ Response 201
+    [Vendor][]
+
+### Update a vendor [PATCH /admin/vendors/{vendor}]
+
++ Parameters
+    + vendor
+
++ Attributes
+    + name
+    + address
+    + email
+    + projectUrl
+    + isPublic
+    + isApproved
+    + isTrusted
+    + type (optional, enum[string])
+        + Members
+            + `other`
+            + `keboola`
+        + Default: `other`
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: {your_token}
+
+    + Body
+
+            {
+                "name": "Company ltd.",
+                "address": "410 Terry Ave. North, Seattle, WA",
+                "email": "info@company.com",
+                "type": "other",
+                "projectUrl": "https://connection.keboola.com/admin/projects/313",
+                "isTrusted": true
+            }
+
++ Response 200
+    [Vendor][]
+
+### Delete a vendor [DELETE /admin/vendors/{vendor}]
+
++ Request
+
+    + Headers
+
+            Authorization: {admin_token}
+
++ Response 204
+
+
+
+### Approve vendor [POST /admin/vendors/{vendor}/approve]
+
++ Attributes
+    + newId (optional) - New vendor id, if you want to rename current temporary id assigned by the portal
+
++ Request
+
+    + Headers
+
+            Authorization: {admin_token}
+
+    + Body
+
+            {
+                "newId": "vendor"
+            }
+
++ Response 204

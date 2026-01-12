@@ -1,0 +1,46 @@
+FORMAT: 1A
+HOST: http://json-parser.keboola.com
+
+# JSON Parser API
+JSON Parser API is a *JSON to CSV* conversion service.
+It parses a JSON file into a CSV, pivoting nested objects and creating multiple linked CSV files for each nested array.
+
+The **linedelimted** option allows to enter multiple JSON structures in a single file. Each JSON object must be then in a single separate line. This option is only available for URL and file uploads.
+
+**For files exceeding 10MB, use the GET method only!**
+
+## Convert JSON from URL [/convert?url={url}&linedelimited={linedelimited}]
+### Convert JSON string on URL [GET]
++ Parameters
+    + url (string) ... URL of the JSON file
+    + linedelimited (optional, 0 or 1) ... Line delimited JSON
+
++ Request
+
++ Response 200 (application/zip)
+
+## Convert JSON from input [/convert]
+### Convert JSON string in form data [POST]
++ Request (application/x-www-form-urlencoded)
+
+        json=[{"id": 1, "title": "Jogging in park"}, {"id": 2, "title": "Pick-up posters from post-office"}]
+
++ Response 200 (application/zip)
+
+### Convert JSON string in a file upload [POST]
++ Request (multipart/form-data; boundary=----WebKitFormBoundaryC5GD12ZfR1D8yZIt)
+
+        ------WebKitFormBoundaryC5GD12ZfR1D8yZIt
+        Content-Disposition: form-data; name="uploads"; filename="file.json"
+        Content-Type: application/json
+
+
+        ------WebKitFormBoundaryC5GD12ZfR1D8yZIt--
+
+        ------WebKitFormBoundaryC5GD12ZfR1D8yZIt
+        Content-Disposition: form-data; name="linedelimited"
+
+        0
+        ------WebKitFormBoundaryC5GD12ZfR1D8yZIt--
+
++ Response 200 (application/zip)

@@ -1,0 +1,1214 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "description": "A service for managing metadata objects with schema validation and versioning.",
+        "title": "Metastore API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.swagger.io/support",
+            "email": "support@swagger.io"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/": {
+            "get": {
+                "description": "Get basic service information and API documentation link",
+                "tags": [
+                    "service"
+                ],
+                "summary": "Service index",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/handlers.IndexResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/documentation": {
+            "get": {
+                "description": "Interactive API documentation with Swagger UI",
+                "tags": [
+                    "documentation"
+                ],
+                "summary": "API Documentation",
+                "responses": {
+                    "200": {
+                        "description": "HTML page with Swagger UI",
+                        "content": {
+                            "text/html": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/repository/{objectType}": {
+            "get": {
+                "security": [
+                    {
+                        "StorageApiToken": []
+                    }
+                ],
+                "description": "List all meta objects of a given type, with optional filters",
+                "tags": [
+                    "repository"
+                ],
+                "summary": "List meta objects",
+                "parameters": [
+                    {
+                        "description": "Object type identifier",
+                        "name": "objectType",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Filter conditions (optional)",
+                        "name": "filter",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of meta objects",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/models.MetaObjectResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "StorageApiToken": []
+                    }
+                ],
+                "description": "Create a new meta object with the specified object type",
+                "tags": [
+                    "repository"
+                ],
+                "summary": "Create meta object",
+                "parameters": [
+                    {
+                        "description": "Object type identifier",
+                        "name": "objectType",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/vnd.api+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/models.CreateRequest"
+                            }
+                        }
+                    },
+                    "description": "Create request",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created meta object",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/models.MetaObjectResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/repository/{objectType}/revisions": {
+            "get": {
+                "security": [
+                    {
+                        "StorageApiToken": []
+                    }
+                ],
+                "description": "List all revisions of meta objects of a given type, with optional filters",
+                "tags": [
+                    "repository"
+                ],
+                "summary": "List meta object revisions",
+                "parameters": [
+                    {
+                        "description": "Object type identifier",
+                        "name": "objectType",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Filter conditions (optional)",
+                        "name": "filter",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of meta object revisions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/models.MetaObjectResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/repository/{objectType}/{UUID}": {
+            "get": {
+                "security": [
+                    {
+                        "StorageApiToken": []
+                    }
+                ],
+                "description": "Get a meta object by its UUID and object type",
+                "tags": [
+                    "repository"
+                ],
+                "summary": "Get meta object",
+                "parameters": [
+                    {
+                        "description": "Object type identifier",
+                        "name": "objectType",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Meta object UUID",
+                        "name": "UUID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Meta object",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/models.MetaObjectResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "StorageApiToken": []
+                    }
+                ],
+                "description": "Replace a meta object by creating a new revision with complete replacement",
+                "tags": [
+                    "repository"
+                ],
+                "summary": "Replace meta object",
+                "parameters": [
+                    {
+                        "description": "Object type identifier",
+                        "name": "objectType",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Meta object UUID",
+                        "name": "UUID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/vnd.api+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/models.MetaObjectUpdatePutRequest"
+                            }
+                        }
+                    },
+                    "description": "PUT request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated meta object",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/models.MetaObjectResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "StorageApiToken": []
+                    }
+                ],
+                "description": "Soft delete a meta object by UUID and object type",
+                "tags": [
+                    "repository"
+                ],
+                "summary": "Soft delete meta object",
+                "parameters": [
+                    {
+                        "description": "Object type identifier",
+                        "name": "objectType",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Meta object UUID",
+                        "name": "UUID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "StorageApiToken": []
+                    }
+                ],
+                "description": "Update a meta object by creating a new revision",
+                "tags": [
+                    "repository"
+                ],
+                "summary": "Update meta object",
+                "parameters": [
+                    {
+                        "description": "Object type identifier",
+                        "name": "objectType",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Meta object UUID",
+                        "name": "UUID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/vnd.api+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/models.MetaObjectUpdatePatchRequest"
+                            }
+                        }
+                    },
+                    "description": "Update request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated meta object",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/models.MetaObjectResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/repository/{objectType}/{UUID}/revisions/{revision}": {
+            "get": {
+                "security": [
+                    {
+                        "StorageApiToken": []
+                    }
+                ],
+                "description": "Get a specific revision of a meta object",
+                "tags": [
+                    "repository"
+                ],
+                "summary": "Get meta object revision",
+                "parameters": [
+                    {
+                        "description": "Object type identifier",
+                        "name": "objectType",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Meta object UUID",
+                        "name": "UUID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "description": "Revision number",
+                        "name": "revision",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Meta object revision",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/models.MetaObjectResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "StorageApiToken": []
+                    }
+                ],
+                "description": "Soft delete a specific revision of a meta object",
+                "tags": [
+                    "repository"
+                ],
+                "summary": "Soft delete meta object revision",
+                "parameters": [
+                    {
+                        "description": "Object type identifier",
+                        "name": "objectType",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Meta object UUID",
+                        "name": "UUID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "description": "Revision number",
+                        "name": "revision",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/schema/{objectType}": {
+            "get": {
+                "description": "Get JSON schema for a specific object type and optional version",
+                "tags": [
+                    "schema"
+                ],
+                "summary": "Get schema",
+                "parameters": [
+                    {
+                        "description": "Object type identifier",
+                        "name": "objectType",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JSON Schema",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/models.Schema"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Schema not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/schema/{objectType}/{version}": {
+            "get": {
+                "description": "Get JSON schema for a specific object type and optional version",
+                "tags": [
+                    "schema"
+                ],
+                "summary": "Get schema",
+                "parameters": [
+                    {
+                        "description": "Object type identifier",
+                        "name": "objectType",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Schema version (required for /{objectType}/{version})",
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JSON Schema",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/models.Schema"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Schema not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/health-check": {
+            "get": {
+                "description": "Get the health status of the service",
+                "tags": [
+                    "health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "servers": [
+        {
+            "url": "//your-instance.keboola.com"
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "StorageApiToken": {
+                "description": "Keboola Storage API token for authentication.",
+                "type": "apiKey",
+                "name": "X-StorageAPI-Token",
+                "in": "header"
+            }
+        },
+        "schemas": {
+            "handlers.IndexResponse": {
+                "type": "object",
+                "properties": {
+                    "apiDocs": {
+                        "type": "string",
+                        "example": "http://localhost:8080/api/v1/documentation/swagger.json"
+                    },
+                    "appName": {
+                        "type": "string",
+                        "example": "metastore"
+                    },
+                    "appVersion": {
+                        "type": "string",
+                        "example": "1.0.0"
+                    }
+                }
+            },
+            "models.CreateRequest": {
+                "description": "Request structure for creating a new metadata object.",
+                "type": "object",
+                "required": [
+                    "data"
+                ],
+                "properties": {
+                    "branch": {
+                        "type": "string",
+                        "example": "main"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/models.JSONData"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "My Article"
+                    },
+                    "schemaVersion": {
+                        "type": "string",
+                        "example": "v1"
+                    },
+                    "scope": {
+                        "type": "string",
+                        "example": "organization"
+                    }
+                }
+            },
+            "models.JSONData": {
+                "description": "JSON data that can contain any valid JSON structure.",
+                "type": "object"
+            },
+            "models.MetaObjectResponse": {
+                "description": "Complete metadata object response including revision information.",
+                "type": "object",
+                "properties": {
+                    "branch": {
+                        "type": "string",
+                        "example": "main"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "example": "2024-01-01T00:00:00Z"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/models.JSONData"
+                    },
+                    "deletedAt": {
+                        "type": "string",
+                        "example": "2024-01-01T00:00:00Z"
+                    },
+                    "lastUpdated": {
+                        "type": "string",
+                        "example": "2024-01-01T00:00:00Z"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "My Article"
+                    },
+                    "objectType": {
+                        "type": "string",
+                        "example": "article"
+                    },
+                    "organizationId": {
+                        "type": "string",
+                        "example": "456"
+                    },
+                    "projectId": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "revision": {
+                        "description": "Revision specific data",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "revisionCreatedAt": {
+                        "type": "string",
+                        "example": "2024-01-01T00:00:00Z"
+                    },
+                    "schemaVersion": {
+                        "type": "string",
+                        "example": "v1"
+                    },
+                    "uuid": {
+                        "type": "string",
+                        "example": "123e4567-e89b-12d3-a456-426614174000"
+                    }
+                }
+            },
+            "models.MetaObjectUpdatePatchRequest": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/models.JSONData"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "models.MetaObjectUpdatePutRequest": {
+                "type": "object",
+                "required": [
+                    "data",
+                    "name"
+                ],
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/models.JSONData"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "models.Schema": {
+                "description": "A JSON schema definition for validating metadata objects.",
+                "type": "object",
+                "properties": {
+                    "createdAt": {
+                        "description": "Timestamp when schema was created",
+                        "type": "string"
+                    },
+                    "createdBy": {
+                        "description": "Metadata about who created the schema",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/models.JSONData"
+                            }
+                        ]
+                    },
+                    "description": {
+                        "description": "Optional description of the schema",
+                        "type": "string",
+                        "example": "Schema for article objects"
+                    },
+                    "id": {
+                        "description": "Unique identifier for each schema record",
+                        "type": "string",
+                        "example": "123e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "isDefault": {
+                        "description": "Whether this is the default schema for this object type",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "objectType": {
+                        "description": "Type of object this schema applies to",
+                        "type": "string",
+                        "example": "article"
+                    },
+                    "schema": {
+                        "description": "The actual JSON schema definition",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/models.JSONData"
+                            }
+                        ]
+                    },
+                    "updatedAt": {
+                        "description": "Timestamp when schema was last updated",
+                        "type": "string",
+                        "example": "2024-01-01T00:00:00Z"
+                    },
+                    "version": {
+                        "description": "Schema version number",
+                        "type": "string",
+                        "example": "v1"
+                    }
+                }
+            }
+        }
+    }
+}
