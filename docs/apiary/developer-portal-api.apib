@@ -611,8 +611,7 @@ specify KBC project ids where it will be available.
     + stackParameters (optional, object) - JSON object with arbitrary parameters passed to the specific stacks of the application. Should contain keys of stack name with the parameters.
     + testConfiguration (optional, object) - JSON configuration to test the application
     + configurationSchema (optional, object) - JSON schema describing the configuration
-    + configurationRowSchema (optional, object) - JSON schema describing the configuration row
-    + createConfigurationRowSchema (optional, object) - JSON schema describing the form for row creation
+    + configurationRowSchema (optional, object) - JSON schema describing the configuration
     + configurationDescription (optional) - Markdown explaining the configuration. Use headlines level 3 or higher (h3, h4, …)
     + emptyConfiguration (optional, object) - Default configuration
     + emptyConfigurationRow (optional, object) - Default configuration for row
@@ -633,6 +632,7 @@ specify KBC project ids where it will be available.
             + `local`
             + `none`
             + `s3`
+            + `workspace-abs`
             + `workspace-exasol`
             + `workspace-redshift`
             + `workspace-snowflake`
@@ -645,6 +645,7 @@ specify KBC project ids where it will be available.
         + Members
             + `local`
             + `none`
+            + `workspace-abs`
             + `workspace-exasol`
             + `workspace-redshift`
             + `workspace-snowflake`
@@ -712,7 +713,6 @@ specify KBC project ids where it will be available.
             "testConfiguration": null,
             "configurationSchema": null,
             "configurationRowSchema": null,
-            "createConfigurationRowSchema": null,
             "configurationDescription": null,
             "configurationFormat": "json",
             "emptyConfiguration": null,
@@ -1013,7 +1013,6 @@ The component will undergo manual review according to [this guidelines](https://
                     "testConfiguration": {},
                     "configurationSchema": {},
                     "configurationRowSchema": {},
-                    "createConfigurationRowSchema": {},
                     "configurationDescription": null,
                     "configurationFormat": "json",
                     "emptyConfiguration": {},
@@ -1090,7 +1089,6 @@ The component will undergo manual review according to [this guidelines](https://
                 "testConfiguration": {},
                 "configurationSchema": {},
                 "configurationRowSchema": {},
-                "createConfigurationRowSchema": {},
                 "configurationDescription": null,
                 "configurationFormat": "json",
                 "emptyConfiguration": {},
@@ -1256,7 +1254,6 @@ Shows the app if its flag `isPublic` is set to `true`
                 "testConfiguration": {},
                 "configurationSchema": {},
                 "configurationRowSchema": {},
-                "createConfigurationRowSchema": {},
                 "configurationDescription": null,
                 "configurationFormat": "json",
                 "emptyConfiguration": {},
@@ -1311,9 +1308,8 @@ Shows the app if its flag `isPublic` is set to `true`
                 "isTrusted": true
             }
 
-## Admin Stacks [/admin/stacks]
 
-### List stacks [GET /admin/stacks]
+### List stacks [GET /stacks]
 
 + Response 200 (application/json)
 
@@ -1323,6 +1319,8 @@ Shows the app if its flag `isPublic` is set to `true`
                 "connection.keboola.com",
                 "connection-eu-west-1.keboola.com"
             ]
+
+
 
 ## Admin Users [/admin/users]
 
@@ -1496,7 +1494,6 @@ It will send email confirmation to a user.
             "testConfiguration": {},
             "configurationSchema": {},
             "configurationRowSchema": {},
-            "createConfigurationRowSchema": {},
             "configurationDescription": null,
             "configurationFormat": "json",
             "emptyConfiguration": {},
@@ -1622,7 +1619,6 @@ Allows to update apps across vendors
     + testConfiguration (optional, object) - JSON configuration to test the application
     + configurationSchema (optional, object) - JSON schema describing the configuration
     + configurationRowSchema (optional, object) - JSON schema describing the configuration row
-    + createConfigurationRowSchema (optional, object) - JSON schema describing the form for row creation
     + configurationDescription (optional) - Markdown explaining the configuration. Use headlines level 3 or higher (h3, h4, …)
     + emptyConfiguration (optional, object) - Default configuration
     + emptyConfigurationRow (optional, object) - Default configuration for row
