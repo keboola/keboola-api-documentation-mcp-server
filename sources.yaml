@@ -26,7 +26,7 @@ sources:
     description: Generic HTTP API extractor configuration
 
   - name: Developer Portal API
-    url: https://raw.githubusercontent.com/keboola/developer-portal/main/apiary.apib
+    url: https://jsapi.apiary.io/apis/kebooladeveloperportal.apib
     output: docs/apiary/developer-portal-api.apib
     format: apib
     description: Developer portal for component registration
@@ -38,7 +38,7 @@ sources:
     description: Orchestration and scheduling API
 
   - name: JSON Parser API
-    url: https://raw.githubusercontent.com/keboola/jsonparser-api/main/apiary.apib
+    url: https://jsapi.apiary.io/apis/jsonparserapi.apib
     output: docs/apiary/json-parser-api.apib
     format: apib
     description: JSON parsing and flattening service
@@ -62,14 +62,8 @@ sources:
     format: openapi
     description: Data apps proxy service
 
-  - name: Metastore Service
-    url: https://raw.githubusercontent.com/keboola/go-monorepo/main/services/metastore/api/handlers/docs/openapi.json
-    output: docs/openapi/metastore-service.json
-    format: openapi
-    description: Metadata storage service
-
   - name: Query Service
-    url: https://raw.githubusercontent.com/keboola/go-monorepo/main/services/query/api/handlers/docs/openapi.json
+    url: https://query.keboola.com/api/v1/documentation/swagger.json
     output: docs/openapi/query-service.json
     format: openapi
     description: SQL query execution service
