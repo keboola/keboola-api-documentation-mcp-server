@@ -33,8 +33,8 @@ This MCP (Model Context Protocol) server provides AI agents with searchable acce
 
 ```bash
 # Clone the repository
-git clone https://github.com/keboola/keboola-developer-documentation-mcp.git
-cd keboola-developer-documentation-mcp
+git clone https://github.com/keboola/keboola-api-documentation-mcp-server
+cd keboola-api-documentation-mcp-server
 
 # Install dependencies
 poetry install
@@ -58,7 +58,7 @@ poetry run keboola-docs update
   "mcpServers": {
     "keboola-docs": {
       "command": "poetry",
-      "args": ["--directory", "/path/to/keboola-developer-documentation-mcp", "run", "python", "-m", "keboola_docs_mcp.server"]
+      "args": ["--directory", "/path/to/keboola-api-documentation-mcp-server", "run", "python", "-m", "keboola_docs_mcp.server"]
     }
   }
 }
@@ -74,7 +74,7 @@ poetry run keboola-docs update
 Add the MCP server using the Claude Code CLI:
 
 ```bash
-claude mcp add keboola-docs -- poetry --directory /path/to/keboola-developer-documentation-mcp run python -m keboola_docs_mcp.server
+claude mcp add keboola-docs -- poetry --directory /path/to/keboola-api-documentation-mcp-server run python -m keboola_docs_mcp.server
 ```
 
 Or add manually to your Claude Code settings:
@@ -84,7 +84,7 @@ Or add manually to your Claude Code settings:
   "mcpServers": {
     "keboola-docs": {
       "command": "poetry",
-      "args": ["--directory", "/path/to/keboola-developer-documentation-mcp", "run", "python", "-m", "keboola_docs_mcp.server"]
+      "args": ["--directory", "/path/to/keboola-api-documentation-mcp-server", "run", "python", "-m", "keboola_docs_mcp.server"]
     }
   }
 }
@@ -101,7 +101,7 @@ Or add manually to your Claude Code settings:
   "mcpServers": {
     "keboola-docs": {
       "command": "poetry",
-      "args": ["--directory", "/path/to/keboola-developer-documentation-mcp", "run", "python", "-m", "keboola_docs_mcp.server"]
+      "args": ["--directory", "/path/to/keboola-api-documentation-mcp-server", "run", "python", "-m", "keboola_docs_mcp.server"]
     }
   }
 }
@@ -116,7 +116,7 @@ Add to your Windsurf MCP settings:
   "mcpServers": {
     "keboola-docs": {
       "command": "poetry",
-      "args": ["--directory", "/path/to/keboola-developer-documentation-mcp", "run", "python", "-m", "keboola_docs_mcp.server"]
+      "args": ["--directory", "/path/to/keboola-api-documentation-mcp-server", "run", "python", "-m", "keboola_docs_mcp.server"]
     }
   }
 }
@@ -131,7 +131,7 @@ If you prefer using `uvx` instead of Poetry:
   "mcpServers": {
     "keboola-docs": {
       "command": "uvx",
-      "args": ["--from", "git+https://github.com/keboola/keboola-developer-documentation-mcp", "python", "-m", "keboola_docs_mcp.server"]
+      "args": ["--from", "git+https://github.com/keboola/keboola-api-documentation-mcp-server", "python", "-m", "keboola_docs_mcp.server"]
     }
   }
 }
@@ -285,7 +285,7 @@ poetry run pytest
 ### Project Structure
 
 ```
-keboola-developer-documentation-mcp/
+keboola-api-documentation-mcp-server/
 ├── docs/
 │   ├── apiary/          # API Blueprint documentation
 │   └── openapi/         # OpenAPI/Swagger specs
