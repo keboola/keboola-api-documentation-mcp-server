@@ -93,8 +93,12 @@ jobs:
           git add docs/
           git commit -m "chore: update API documentation"
           git push -u origin "$BRANCH_NAME"
-          gh pr create \
+          # Create PR and enable auto-merge
+          PR_URL=$(gh pr create \
             --title "chore: update API documentation" \
             --body "Automated update of API documentation from upstream sources." \
             --base main \
-            --head "$BRANCH_NAME"
+            --head "$BRANCH_NAME")
+
+          # Enable auto-merge (will merge automatically when CI passes)
+          gh pr merge "$PR_URL" --auto --squash
