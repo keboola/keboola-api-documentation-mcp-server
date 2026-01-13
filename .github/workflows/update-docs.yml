@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   update-docs:
@@ -66,11 +67,20 @@ jobs:
         run: |
           git diff --quiet docs/ || echo "changes=true" >> $GITHUB_OUTPUT
 
-      - name: Commit and push changes
+      - name: Create PR with changes
         if: steps.git-check.outputs.changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          BRANCH_NAME="docs-update-$(date +%Y%m%d-%H%M%S)"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
+          git checkout -b "$BRANCH_NAME"
           git add docs/
-          git commit -m "chore: update API documentation [skip ci]"
-          git push
+          git commit -m "chore: update API documentation"
+          git push -u origin "$BRANCH_NAME"
+          gh pr create \
+            --title "chore: update API documentation" \
+            --body "Automated update of API documentation from upstream sources." \
+            --base main \
+            --head "$BRANCH_NAME"
