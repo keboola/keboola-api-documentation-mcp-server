@@ -6,7 +6,7 @@ from typing import Optional
 from mcp.server.fastmcp import Context, FastMCP
 
 from .index import SearchIndex, build_index
-from .models import ApiInfo, Endpoint
+from .models import Endpoint
 
 
 @asynccontextmanager
@@ -168,25 +168,27 @@ def _endpoint_to_dict(endpoint: Endpoint, brief: bool = False) -> dict:
     }
 
     if not brief:
-        result.update({
-            "description": endpoint.description,
-            "parameters": [
-                {
-                    "name": p.name,
-                    "location": p.location,
-                    "type": p.type,
-                    "required": p.required,
-                    "description": p.description,
-                    "default": p.default,
-                    "example": p.example,
-                }
-                for p in endpoint.parameters
-            ],
-            "request_example": endpoint.request_example,
-            "response_example": endpoint.response_example,
-            "auth_header": endpoint.auth_header,
-            "base_url": endpoint.base_url,
-        })
+        result.update(
+            {
+                "description": endpoint.description,
+                "parameters": [
+                    {
+                        "name": p.name,
+                        "location": p.location,
+                        "type": p.type,
+                        "required": p.required,
+                        "description": p.description,
+                        "default": p.default,
+                        "example": p.example,
+                    }
+                    for p in endpoint.parameters
+                ],
+                "request_example": endpoint.request_example,
+                "response_example": endpoint.response_example,
+                "auth_header": endpoint.auth_header,
+                "base_url": endpoint.base_url,
+            }
+        )
 
     return result
 
