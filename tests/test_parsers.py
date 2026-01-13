@@ -1,7 +1,6 @@
 """Tests for API documentation parsers."""
 
 import pytest
-from pathlib import Path
 
 from keboola_docs_mcp.parsers import ApibParser, OpenApiParser
 from keboola_docs_mcp.config import get_docs_dir
