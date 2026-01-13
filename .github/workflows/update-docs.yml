@@ -64,8 +64,22 @@ jobs:
 
       - name: Check for changes
         id: git-check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git diff --quiet docs/ || echo "changes=true" >> $GITHUB_OUTPUT
+          if git diff --quiet docs/; then
+            echo "No changes detected in docs/"
+            exit 0
+          fi
+
+          # Check if there's already an open PR for docs updates
+          EXISTING_PR=$(gh pr list --state open --search "chore: update API documentation" --json number --jq '.[0].number')
+          if [ -n "$EXISTING_PR" ]; then
+            echo "PR #$EXISTING_PR already exists, skipping"
+            exit 0
+          fi
+
+          echo "changes=true" >> $GITHUB_OUTPUT
 
       - name: Create PR with changes
         if: steps.git-check.outputs.changes == 'true'
