@@ -1,0 +1,24 @@
+name: Auto-approve docs updates
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+
+permissions:
+  pull-requests: write
+
+jobs:
+  auto-approve:
+    runs-on: ubuntu-latest
+    # Only auto-approve PRs from github-actions bot
+    if: github.actor == 'github-actions[bot]'
+    steps:
+      - name: Approve PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr review "${{ github.event.pull_request.number }}" \
+            --repo "${{ github.repository }}" \
+            --approve \
+            --body "Auto-approved: docs-only update from bot"
