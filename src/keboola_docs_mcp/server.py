@@ -8,6 +8,12 @@ from mcp.server.fastmcp import Context, FastMCP
 from .index import SearchIndex, build_index
 from .models import Endpoint
 
+# Mapping of auth headers to recommended environment variable names
+AUTH_HEADER_TO_ENV_VAR = {
+    "X-StorageApi-Token": "KBC_STORAGE_API_TOKEN",
+    "X-KBC-ManageApiToken": "KBC_MANAGE_API_TOKEN",
+}
+
 
 @asynccontextmanager
 async def lifespan(server: FastMCP):
@@ -31,10 +37,55 @@ def get_index(ctx: Context) -> SearchIndex:
 
 
 @mcp.tool()
+async def get_connection_info() -> dict:
+    """Get information about how to connect to Keboola APIs.
+
+    Returns details about:
+    - Required environment variables for authentication tokens
+    - Host/stack configuration (Keboola has multiple environments)
+    - How to construct API requests
+
+    IMPORTANT: Always call this first to understand how to configure API access.
+    """
+    return {
+        "host_configuration": {
+            "note": "Keboola has multiple stacks. The host URL depends on the user's environment.",
+            "env_var": "KBC_STORAGE_API_URL",
+            "example_hosts": [
+                "https://connection.keboola.com (US)",
+                "https://connection.eu-central-1.keboola.com (EU)",
+                "https://connection.us-east4.gcp.keboola.com (GCP US)",
+                "https://connection.north-europe.azure.keboola.com (Azure EU)",
+            ],
+            "instruction": "Ask the user for their Keboola stack URL or check KBC_STORAGE_API_URL env var.",
+        },
+        "authentication": {
+            "storage_api": {
+                "header": "X-StorageApi-Token",
+                "env_var": "KBC_STORAGE_API_TOKEN",
+                "used_by": ["Storage API", "most component APIs"],
+            },
+            "manage_api": {
+                "header": "X-KBC-ManageApiToken",
+                "env_var": "KBC_MANAGE_API_TOKEN",
+                "used_by": ["Management API"],
+            },
+        },
+        "curl_example": (
+            'curl "$KBC_STORAGE_API_URL/v2/storage/buckets" \\\n'
+            '  -H "X-StorageApi-Token: $KBC_STORAGE_API_TOKEN"'
+        ),
+    }
+
+
+@mcp.tool()
 async def list_apis(ctx: Context) -> list[dict]:
     """List all available Keboola APIs.
 
     Returns a list of APIs with their names, descriptions, and endpoint counts.
+
+    Note: Base URLs shown are examples. Actual host depends on user's Keboola stack.
+    Use get_connection_info() to understand host and token configuration.
     """
     index = get_index(ctx)
     apis = index.list_apis()
@@ -43,7 +94,9 @@ async def list_apis(ctx: Context) -> list[dict]:
             "name": api.name,
             "description": api.description,
             "base_url": api.base_url,
+            "base_url_note": "Example only - actual host depends on user's Keboola stack",
             "auth_header": api.auth_header,
+            "token_env_var": AUTH_HEADER_TO_ENV_VAR.get(api.auth_header),
             "sections": api.sections,
             "endpoint_count": api.endpoint_count,
         }
@@ -159,7 +212,11 @@ async def get_request_example(
 
 def _endpoint_to_dict(endpoint: Endpoint, brief: bool = False) -> dict:
     """Convert endpoint to dictionary representation."""
-    result = {
+    token_env_var = None
+    if endpoint.auth_header:
+        token_env_var = AUTH_HEADER_TO_ENV_VAR.get(endpoint.auth_header)
+
+    result: dict = {
         "api_name": endpoint.api_name,
         "section": endpoint.section,
         "method": endpoint.method,
@@ -168,47 +225,44 @@ def _endpoint_to_dict(endpoint: Endpoint, brief: bool = False) -> dict:
     }
 
     if not brief:
-        result.update(
+        result["description"] = endpoint.description
+        result["parameters"] = [
             {
-                "description": endpoint.description,
-                "parameters": [
-                    {
-                        "name": p.name,
-                        "location": p.location,
-                        "type": p.type,
-                        "required": p.required,
-                        "description": p.description,
-                        "default": p.default,
-                        "example": p.example,
-                    }
-                    for p in endpoint.parameters
-                ],
-                "request_example": endpoint.request_example,
-                "response_example": endpoint.response_example,
-                "auth_header": endpoint.auth_header,
-                "base_url": endpoint.base_url,
+                "name": p.name,
+                "location": p.location,
+                "type": p.type,
+                "required": p.required,
+                "description": p.description,
+                "default": p.default,
+                "example": p.example,
             }
-        )
+            for p in endpoint.parameters
+        ]
+        result["request_example"] = endpoint.request_example
+        result["response_example"] = endpoint.response_example
+        result["auth_header"] = endpoint.auth_header
+        result["token_env_var"] = token_env_var
+        result["base_url"] = endpoint.base_url
+        result["base_url_note"] = "Example only - use $KBC_STORAGE_API_URL env var"
 
     return result
 
 
 def _generate_curl_example(endpoint: Endpoint) -> str:
-    """Generate a curl command example for an endpoint."""
+    """Generate a curl command example for an endpoint using environment variables."""
     parts = ["curl"]
 
     # Method
     if endpoint.method != "GET":
         parts.append(f"-X {endpoint.method}")
 
-    # URL
-    url = endpoint.base_url or "https://connection.keboola.com"
-    url = url.rstrip("/") + endpoint.path
-    parts.append(f'"{url}"')
+    # URL - use env var for host
+    parts.append(f'"$KBC_STORAGE_API_URL{endpoint.path}"')
 
-    # Auth header
+    # Auth header - use env var for token
     if endpoint.auth_header:
-        parts.append(f'-H "{endpoint.auth_header}: YOUR_TOKEN"')
+        token_env_var = AUTH_HEADER_TO_ENV_VAR.get(endpoint.auth_header, "KBC_TOKEN")
+        parts.append(f'-H "{endpoint.auth_header}: ${token_env_var}"')
 
     # Content-Type for POST/PUT/PATCH
     if endpoint.method in ["POST", "PUT", "PATCH"]:
@@ -220,7 +274,18 @@ def _generate_curl_example(endpoint: Endpoint) -> str:
             body = endpoint.request_example.replace("\n", "").replace("  ", "")
             parts.append(f"-d '{body}'")
 
-    return " \\\n  ".join(parts)
+    example = " \\\n  ".join(parts)
+
+    # Add note about environment variables
+    note = (
+        "\n\n# Required environment variables:\n"
+        "#   KBC_STORAGE_API_URL - Your Keboola stack URL (e.g., https://connection.keboola.com)\n"
+    )
+    if endpoint.auth_header:
+        token_env_var = AUTH_HEADER_TO_ENV_VAR.get(endpoint.auth_header, "KBC_TOKEN")
+        note += f"#   {token_env_var} - Your API token\n"
+
+    return example + note
 
 
 def run_server():
