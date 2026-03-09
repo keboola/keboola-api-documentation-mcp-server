@@ -89,6 +89,9 @@
                 "createdAt": {
                     "type": "string"
                 },
+                "expiration": {
+                    "type": "string"
+                },
                 "queryJobId": {
                     "example": "job-12345",
                     "type": "string"
@@ -270,9 +273,6 @@
                 "rowsAffected": {
                     "type": "integer"
                 },
-                "sessionId": {
-                    "type": "string"
-                },
                 "status": {
                     "$ref": "#/definitions/models.StatementState"
                 }
@@ -319,9 +319,6 @@
                 "rowsAffected": {
                     "type": "integer"
                 },
-                "sessionId": {
-                    "type": "string"
-                },
                 "status": {
                     "$ref": "#/definitions/models.StatementState"
                 },
@@ -342,6 +339,10 @@
                 "queryJobId": {
                     "example": "job-12345",
                     "type": "string"
+                },
+                "sessionId": {
+                    "example": "550e8400-e29b-41d4-a716-446655440000",
+                    "type": "string"
                 }
             },
             "required": [
@@ -358,6 +359,10 @@
                         }
                     ],
                     "example": "user"
+                },
+                "sessionId": {
+                    "example": "550e8400-e29b-41d4-a716-446655440000",
+                    "type": "string"
                 },
                 "statements": {
                     "example": [
@@ -767,6 +772,87 @@
                     }
                 },
                 "summary": "Cancel job",
+                "tags": [
+                    "jobs"
+                ]
+            }
+        },
+        "/api/v1/queries/{queryJobId}/{statementId}/export": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "description": "Export the results of a specific statement within a query job as a downloadable file (CSV or Parquet). Creates a temporary table from query results, exports it to Storage API, and streams the content to the client.",
+                "parameters": [
+                    {
+                        "description": "Query job ID",
+                        "example": "job-12345",
+                        "in": "path",
+                        "name": "queryJobId",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "description": "Statement ID",
+                        "example": "stmt-67890",
+                        "in": "path",
+                        "name": "statementId",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "description": "Export format: csv or parquet",
+                        "enum": [
+                            "csv",
+                            "parquet"
+                        ],
+                        "in": "query",
+                        "name": "fileType",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "produces": [
+                    "text/csv",
+                    "application/x-parquet"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "File download (CSV or Parquet)",
+                        "headers": {
+                            "Content-Disposition": {
+                                "description": "attachment; filename=\\\"export_{timestamp}.{format}\\",
+                                "type": "string"
+                            },
+                            "Content-Type": {
+                                "description": "text/csv or application/x-parquet",
+                                "type": "string"
+                            }
+                        },
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - invalid format, queryJobId or statementId is required, or statement not completed",
+                        "schema": {
+                            "$ref": "#/definitions/httperrors.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found - job or statement not found",
+                        "schema": {
+                            "$ref": "#/definitions/httperrors.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error - failed to create table, export, or download file",
+                        "schema": {
+                            "$ref": "#/definitions/httperrors.ErrorResponse"
+                        }
+                    }
+                },
+                "summary": "Export job results as CSV or Parquet",
                 "tags": [
                     "jobs"
                 ]
