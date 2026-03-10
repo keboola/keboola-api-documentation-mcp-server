@@ -374,6 +374,10 @@
                     },
                     "type": "array"
                 },
+                "timeout": {
+                    "example": "60s",
+                    "type": "string"
+                },
                 "transactional": {
                     "example": true,
                     "type": "boolean"
@@ -782,7 +786,7 @@
                 "consumes": [
                     "application/json"
                 ],
-                "description": "Export the results of a specific statement within a query job as a downloadable file (CSV or Parquet). Creates a temporary table from query results, exports it to Storage API, and streams the content to the client.",
+                "description": "Export the results of a specific statement within a query job as a downloadable file (CSV or Parquet). Creates a temporary table from query results, exports it to Storage API, and returns the content to the client.",
                 "parameters": [
                     {
                         "description": "Query job ID",
@@ -841,6 +845,12 @@
                     },
                     "404": {
                         "description": "Not found - job or statement not found",
+                        "schema": {
+                            "$ref": "#/definitions/httperrors.ErrorResponse"
+                        }
+                    },
+                    "413": {
+                        "description": "Payload Too Large - export exceeds maximum allowed size",
                         "schema": {
                             "$ref": "#/definitions/httperrors.ErrorResponse"
                         }
