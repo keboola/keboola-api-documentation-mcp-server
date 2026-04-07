@@ -4,7 +4,7 @@
 sources:
   # Apiary (.apib) files from GitHub
   - name: Storage API
-    url: https://raw.githubusercontent.com/keboola/storage-api-php-client/master/apiary.apib
+    url: https://raw.githubusercontent.com/keboola/connection/master/Package/StorageApiPhpClient/apiary.apib
     output: docs/apiary/storage-api.apib
     format: apib
     description: Core data storage API for tables, buckets, files, and jobs
@@ -12,7 +12,7 @@ sources:
     base_url: https://connection.keboola.com
 
   - name: Management API
-    url: https://raw.githubusercontent.com/keboola/kbc-manage-api-php-client/master/apiary.apib
+    url: https://raw.githubusercontent.com/keboola/connection/master/Package/ManageApiPhpClient/apiary.apib
     output: docs/apiary/manage-api.apib
     format: apib
     description: Project and organization management API
