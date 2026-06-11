@@ -26,9 +26,9 @@ sources:
     description: Generic HTTP API extractor configuration
 
   - name: Developer Portal API
-    url: https://jsapi.apiary.io/apis/kebooladeveloperportal.apib
-    output: docs/apiary/developer-portal-api.apib
-    format: apib
+    url: https://apps-api.keboola.com/docs/openapi.yaml
+    output: docs/openapi/developer-portal-api.yaml
+    format: openapi
     description: Developer portal for component registration
 
   - name: Orchestrator API
